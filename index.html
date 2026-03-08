@@ -107,6 +107,23 @@ display:flex;
 flex-direction:column;
 }
 
+.einsatzFeldGross{
+margin-top:12px;
+display:flex;
+flex-direction:column;
+}
+
+.einsatzFeldGross textarea{
+width:100%;
+box-sizing:border-box;
+padding:10px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
+margin-top:5px;
+resize:vertical;
+}
+
 .einsatzFeld input{
 padding:10px;
 font-size:16px;
@@ -120,6 +137,34 @@ display:grid;
 grid-template-columns:repeat(3, minmax(0,1fr));
 gap:10px;
 margin-top:10px;
+}
+
+.einsatzHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+cursor:pointer;
+}
+
+.toggleSymbol{
+font-size:18px;
+}
+
+.einsatzInhalt{
+margin-top:10px;
+}
+
+#tagSpeichern{
+margin-top:25px;
+padding:12px;
+font-size:16px;
+border:none;
+border-radius:10px;
+background:#222;
+color:white;
+font-weight:bold;
+cursor:pointer;
+width:100%;
 }
 
 </style>
@@ -188,6 +233,21 @@ margin-top:10px;
 <option value="Dogan">
 </datalist>
 
+<datalist id="einsatzartenListe">
+
+<option value="Gasgeruch">
+<option value="Gasdruckproblem">
+<option value="Gasleitung beschädigt">
+<option value="Wasserrohrbruch">
+<option value="Wasser aus Erde">
+<option value="Laterne angefahren">
+<option value="Stromausfall">
+<option value="Hausanschluss Störung">
+<option value="Zählerwechsel">
+<option value="Kontrolle">
+
+</datalist>
+
 </div>
 
 </div>
@@ -196,6 +256,8 @@ margin-top:10px;
 <button id="neuerEinsatz">+ Einsatz hinzufügen</button>
 
 <div id="einsatzListe"></div>
+
+<button id="tagSpeichern">Arbeitstag speichern</button>
 
 
 <script>
@@ -266,16 +328,21 @@ let container = document.createElement("div");
 container.className = "einsatz";
 
 container.innerHTML = `
-<h3>Einsatz ${einsatzNummer}</h3>
+<div class="einsatzHeader">
+<h3 class="einsatzTitel">Einsatz ${einsatzNummer}</h3>
+<span class="toggleSymbol">▼</span>
+</div>
+
+<div class="einsatzInhalt">
 
 <div class="einsatzFeld">
 <label>Einsatzart</label>
-<input type="text" placeholder="z.B. Gasgeruch">
+<input list="einsatzartenListe" placeholder="Einsatzart wählen oder tippen">
 </div>
 
 <div class="einsatzFeld">
 <label>Adresse</label>
-<input type="text" placeholder="Straße / Hausnummer">
+<input type="text" class="adresseFeld" placeholder="Straße / Hausnummer">
 </div>
 
 <div class="einsatzFeld">
@@ -301,13 +368,115 @@ container.innerHTML = `
 </div>
 
 </div>
+
+<div class="einsatzFeldGross">
+<label>Feststellung</label>
+<textarea rows="3" placeholder="Situation vor Ort"></textarea>
+</div>
+
+<div class="einsatzFeldGross">
+<label>Maßnahmen</label>
+<textarea rows="3" placeholder="Was wurde unternommen"></textarea>
+</div>
+
+<div class="einsatzFeldGross">
+<label>Bemerkung</label>
+<textarea rows="2" placeholder="Weitere Hinweise"></textarea>
+</div>
+</div>
 `;
 
+container.querySelector(".einsatzHeader").addEventListener("click", function(){
 
+let inhalt = container.querySelector(".einsatzInhalt");
+let symbol = container.querySelector(".toggleSymbol");
+
+if(inhalt.style.display === "none"){
+inhalt.style.display = "block";
+symbol.textContent = "▼";
+}else{
+inhalt.style.display = "none";
+symbol.textContent = "▶";
+}
+
+});
+
+let adresseInput = container.querySelector(".adresseFeld");
+let titel = container.querySelector(".einsatzTitel");
+
+adresseInput.addEventListener("input", function(){
+
+if(this.value.trim() !== ""){
+titel.textContent = "Einsatz " + einsatzNummer + " – " + this.value;
+}else{
+titel.textContent = "Einsatz " + einsatzNummer;
+}
+
+});
 
 document.getElementById("einsatzListe").appendChild(container);
 
 });
+
+document.getElementById("tagSpeichern").addEventListener("click", function(){
+
+let arbeitstag = {};
+
+arbeitstag.datum = document.getElementById("datum").value;
+arbeitstag.schicht = document.getElementById("schicht").value;
+arbeitstag.wagen = document.getElementById("wagen").value;
+arbeitstag.kollege = document.getElementById("kollege").value;
+
+arbeitstag.einsaetze = [];
+
+let einsaetze = document.querySelectorAll(".einsatz");
+
+einsaetze.forEach(function(einsatz){
+
+let daten = {};
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+daten.einsatzart = inputs[0].value;
+daten.adresse = inputs[1].value;
+daten.melder = inputs[2].value;
+daten.meldung = inputs[3].value;
+daten.eintreffen = inputs[4].value;
+daten.abfahrt = inputs[5].value;
+daten.feststellung = inputs[6].value;
+daten.massnahmen = inputs[7].value;
+daten.bemerkung = inputs[8].value;
+
+arbeitstag.einsaetze.push(daten);
+
+});
+
+downloadJSON(arbeitstag);
+
+});
+
+function downloadJSON(daten){
+
+let json = JSON.stringify(daten, null, 2);
+
+let blob = new Blob([json], {type: "application/json"});
+
+let url = URL.createObjectURL(blob);
+
+let link = document.createElement("a");
+
+let datum = new Date().toISOString().split("T")[0];
+
+link.href = url;
+link.download = "MED_" + datum + ".json";
+
+link.click();
+
+URL.revokeObjectURL(url);
+
+}
+
+
 
 
 </script>
