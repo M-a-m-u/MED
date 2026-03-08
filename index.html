@@ -2,13 +2,66 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>MED – Einsatz Tagebuch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<title>MED – Mobiler Entstörungsdienst</title>
+
+<style>
+
+body{
+margin: -100px;
+font-family:Arial, Helvetica, sans-serif;
+background:#50d857;
+color:white;
+text-align:center;
+}
+
+/* Cover */
+
+#cover{
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+height:100dvh;
+cursor:pointer;
+}
+
+#cover h1{
+font-size:4.2em;
+margin-bottom:10px;
+}
+
+#cover p{
+font-size:1em;
+opacity:0.8;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h1>MED – Mobiler Entstörungsdienst</h1>
-<p>Projektstart</p>
+<div id="cover" onclick="startApp()">
+
+<h1>MED</h1>
+<p>Mobiler Entstörungsdienst</p>
+<p>Tippen zum Starten</p>
+
+</div>
+
+<script>
+
+function startApp(){
+
+document.getElementById("cover").style.display="none";
+
+}
+
+</script>
 
 </body>
 </html>
