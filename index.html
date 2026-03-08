@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,7 +12,7 @@
 <style>
 
 body{
-margin: -100px;
+margin:0;
 font-family:Arial, Helvetica, sans-serif;
 background:#50d857;
 color:white;
@@ -39,27 +40,246 @@ font-size:1em;
 opacity:0.8;
 }
 
+/* Hauptseite */
+
+#mainPage{
+display:none;
+padding:20px;
+}
+
+h2{
+margin-top:20px;
+}
+
+.feld{
+margin-top:15px;
+display:flex;
+flex-direction:column;
+}
+
+.grid2{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-top:20px;
+}
+
+input, select{
+width:100%;
+box-sizing:border-box;
+padding:10px;
+font-size:16px;
+border-radius:8px;
+border:none;
+margin-top:5px;
+}
+
+#neuerEinsatz{
+margin-top:30px;
+padding:12px;
+font-size:16px;
+border:none;
+border-radius:10px;
+background:white;
+color:#50d857;
+font-weight:bold;
+cursor:pointer;
+width:100%;
+}
+
+#einsatzListe{
+margin-top:25px;
+}
+
+.einsatz{
+background:white;
+color:black;
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+text-align:left;
+}
+
+.einsatzFeld{
+margin-top:10px;
+display:flex;
+flex-direction:column;
+}
+
+.einsatzFeld input{
+padding:10px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
+margin-top:4px;
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div id="cover" onclick="startApp()">
+<!-- Cover -->
 
+<div id="cover" onclick="startApp()">
 <h1>MED</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
+</div>
+
+
+<!-- Hauptseite -->
+
+<div id="mainPage">
+
+<h2>Arbeitstag</h2>
+
+<div class="grid2">
+
+<div class="feld">
+<label>Datum</label>
+<input type="date" id="datum">
+</div>
+
+<div class="feld">
+<label>Schicht</label>
+<select id="schicht">
+<option>Früh</option>
+<option>Spät</option>
+<option>Nacht</option>
+<option>Andere</option>
+</select>
+</div>
+
+<div class="feld">
+<label>Wagen</label>
+
+<select id="wagen">
+<option value="">Fahrzeug wählen</option>
+<option>WG 408</option>
+<option>WG 351</option>
+<option>WG 508</option>
+<option>WG 509</option>
+<option>WG 215</option>
+<option>WG 216</option>
+</select>
 
 </div>
+
+<div class="feld">
+<label>Kollege</label>
+
+<input list="kollegenListe" id="kollege" placeholder="Kollege wählen">
+
+<datalist id="kollegenListe">
+<option value="Schischke">
+<option value="Tichelkamp">
+<option value="Stoll">
+<option value="Zöller">
+<option value="Dogan">
+</datalist>
+
+</div>
+
+</div>
+
+
+<button id="neuerEinsatz">+ Einsatz hinzufügen</button>
+
+<div id="einsatzListe"></div>
+
 
 <script>
 
 function startApp(){
-
 document.getElementById("cover").style.display="none";
+document.getElementById("mainPage").style.display="block";
+}
+
+
+/* Datum automatisch setzen */
+
+window.onload = function(){
+
+let heute = new Date().toISOString().split("T")[0];
+document.getElementById("datum").value = heute;
+
+
+/* letzten Wagen laden */
+
+let letzterWagen = localStorage.getItem("wagen");
+
+if(letzterWagen){
+document.getElementById("wagen").value = letzterWagen;
+}
+
+
+/* letzten Kollegen laden */
+
+let letzterKollege = localStorage.getItem("kollege");
+
+if(letzterKollege){
+document.getElementById("kollege").value = letzterKollege;
+}
+
+/* letzte Schicht laden */
+
+let letzteSchicht = localStorage.getItem("schicht");
+
+if(letzteSchicht){
+document.getElementById("schicht").value = letzteSchicht;
+}
 
 }
+
+document.getElementById("wagen").addEventListener("change", function(){
+localStorage.setItem("wagen", this.value);
+});
+
+
+document.getElementById("kollege").addEventListener("change", function(){
+localStorage.setItem("kollege", this.value);
+});
+
+
+document.getElementById("schicht").addEventListener("change", function(){
+localStorage.setItem("schicht", this.value);
+});
+
+
+let einsatzNummer = 0;
+
+document.getElementById("neuerEinsatz").addEventListener("click", function(){
+
+einsatzNummer++;
+
+let container = document.createElement("div");
+container.className = "einsatz";
+
+container.innerHTML = `
+<h3>Einsatz ${einsatzNummer}</h3>
+
+<div class="einsatzFeld">
+<label>Einsatzart</label>
+<input type="text" placeholder="z.B. Gasgeruch">
+</div>
+
+<div class="einsatzFeld">
+<label>Adresse</label>
+<input type="text" placeholder="Straße / Hausnummer">
+</div>
+
+<div class="einsatzFeld">
+<label>Melder</label>
+<input type="text" placeholder="Name oder Firma">
+</div>
+`;
+
+document.getElementById("einsatzListe").appendChild(container);
+
+});
+
 
 </script>
 
