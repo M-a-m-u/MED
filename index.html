@@ -75,6 +75,15 @@ border:none;
 margin-top:5px;
 }
 
+input[type="date"],
+input[type="time"]{
+width:100%;
+height:42px;
+box-sizing:border-box;
+font-size:16px;
+padding:6px 8px;
+}
+
 #neuerEinsatz{
 margin-top:30px;
 padding:12px;
@@ -137,6 +146,11 @@ display:grid;
 grid-template-columns:repeat(3, minmax(0,1fr));
 gap:10px;
 margin-top:10px;
+}
+
+.zeitGrid input{
+width:100%;
+min-width:0;
 }
 
 .einsatzHeader{
