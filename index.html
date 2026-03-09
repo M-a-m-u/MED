@@ -208,6 +208,39 @@ cursor:pointer;
 width:100%;
 }
 
+#historieListe{
+margin-top:20px;
+}
+
+.historieEintrag{
+background:white;
+color:black;
+padding:12px;
+border-radius:8px;
+margin-top:10px;
+cursor:pointer;
+}
+
+#historieButton{
+margin-top:15px;
+padding:10px;
+width:100%;
+border:none;
+border-radius:8px;
+background:#333;
+color:white;
+}
+
+#zurueckZurApp{
+margin-top:20px;
+padding:10px;
+width:100%;
+border:none;
+border-radius:8px;
+background:#50d857;
+color:white;
+}
+
 </style>
 
 </head>
@@ -217,7 +250,7 @@ width:100%;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>053</h1>
+<h1>063</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -300,6 +333,19 @@ width:100%;
 
 <button id="tagSpeichern">Arbeitstag speichern</button>
 
+<button id="historieButton">Historie anzeigen</button>
+
+</div>
+
+<div id="historiePage" style="display:none">
+
+<h2>Historie</h2>
+
+<div id="historieListe"></div>
+
+<button id="zurueckZurApp">Zurück</button>
+
+</div>
 
 <script>
 
@@ -315,7 +361,19 @@ window.onload = function(){
 
 let heute = new Date().toISOString().split("T")[0];
 document.getElementById("datum").value = heute;
+document.getElementById("datum").addEventListener("change", function(){
 
+let bestaetigung = confirm("Neuen Arbeitstag beginnen? Alle aktuellen Einsätze werden gelöscht.");
+
+if(bestaetigung){
+
+document.getElementById("einsatzListe").innerHTML = "";
+
+einsatzNummer = 0;
+
+}
+
+});
 
 /* letzten Wagen laden */
 
@@ -492,7 +550,23 @@ arbeitstag.einsaetze.push(daten);
 
 });
 
-downloadJSON(arbeitstag);
+let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+
+let index = archiv.findIndex(tag => tag.datum === arbeitstag.datum);
+
+if(index !== -1){
+
+archiv[index] = arbeitstag;
+
+}else{
+
+archiv.push(arbeitstag);
+
+}
+
+localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+
+alert("Arbeitstag gespeichert.");
 
 });
 
@@ -517,7 +591,139 @@ URL.revokeObjectURL(url);
 
 }
 
+document.getElementById("historieButton").addEventListener("click", function(){
 
+document.getElementById("mainPage").style.display = "none";
+document.getElementById("historiePage").style.display = "block";
+
+ladeHistorie();
+
+});
+
+document.getElementById("zurueckZurApp").addEventListener("click", function(){
+
+document.getElementById("historiePage").style.display = "none";
+document.getElementById("mainPage").style.display = "block";
+
+});
+
+function ladeHistorie(){
+
+let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+
+let liste = document.getElementById("historieListe");
+
+liste.innerHTML = "";
+
+archiv.forEach(function(tag){
+
+let div = document.createElement("div");
+
+div.className = "historieEintrag";
+
+div.innerText = tag.datum + " – " + tag.schicht + " – " + tag.einsaetze.length + " Einsätze";
+
+div.addEventListener("click", function(){
+
+ladeArbeitstag(tag);
+
+});
+
+liste.appendChild(div);
+
+});
+
+}
+
+function ladeArbeitstag(tag){
+
+document.getElementById("historiePage").style.display = "none";
+document.getElementById("mainPage").style.display = "block";
+
+document.getElementById("datum").value = tag.datum;
+document.getElementById("schicht").value = tag.schicht;
+document.getElementById("wagen").value = tag.wagen;
+document.getElementById("kollege").value = tag.kollege;
+
+document.getElementById("einsatzListe").innerHTML = "";
+
+einsatzNummer = 0;
+
+tag.einsaetze.forEach(function(e){
+
+einsatzNummer++;
+
+let container = document.createElement("div");
+
+container.className = "einsatz";
+
+/* hier benutzen wir den gleichen Aufbau wie beim normalen Einsatz */
+
+container.innerHTML = `
+<div class="einsatzHeader">
+<h3 class="einsatzTitel">Einsatz ${einsatzNummer}</h3>
+<span class="toggleSymbol">▼</span>
+</div>
+
+<div class="einsatzInhalt">
+
+<div class="einsatzFeld">
+<label>Einsatzart</label>
+<input type="text" value="${e.einsatzart}">
+</div>
+
+<div class="einsatzFeld">
+<label>Adresse</label>
+<input type="text" class="adresseFeld" value="${e.adresse}">
+</div>
+
+<div class="einsatzFeld">
+<label>Melder</label>
+<input type="text" value="${e.melder}">
+</div>
+
+<div class="zeitGrid">
+
+<div class="einsatzFeld">
+<label>Meldung</label>
+<input type="time" value="${e.meldung}">
+</div>
+
+<div class="einsatzFeld">
+<label>Eintreffen</label>
+<input type="time" value="${e.eintreffen}">
+</div>
+
+<div class="einsatzFeld">
+<label>Abfahrt</label>
+<input type="time" value="${e.abfahrt}">
+</div>
+
+</div>
+
+<div class="einsatzFeldGross">
+<label>Feststellung</label>
+<textarea rows="3">${e.feststellung}</textarea>
+</div>
+
+<div class="einsatzFeldGross">
+<label>Maßnahmen</label>
+<textarea rows="3">${e.massnahmen}</textarea>
+</div>
+
+<div class="einsatzFeldGross">
+<label>Bemerkung</label>
+<textarea rows="2">${e.bemerkung}</textarea>
+</div>
+
+</div>
+`;
+
+document.getElementById("einsatzListe").appendChild(container);
+
+});
+
+}
 
 
 </script>
