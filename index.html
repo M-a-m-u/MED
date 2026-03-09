@@ -157,8 +157,27 @@ margin-top:4px;
 .zeitGrid{
 display:grid;
 grid-template-columns:repeat(3, minmax(0,1fr));
-gap:10px;
+gap:8px;
 margin-top:10px;
+width:100%;
+}
+
+/* iPhone Fix für Zeitfelder */
+
+.zeitGrid input[type="time"]{
+appearance:none;
+-webkit-appearance:none;
+
+width:100%;
+max-width:100%;
+
+min-width:0;
+
+height:40px;
+
+box-sizing:border-box;
+font-size:15px;
+padding:0 4px;
 }
 
 .einsatzHeader{
@@ -198,7 +217,7 @@ width:100%;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>052</h1>
+<h1>053</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
