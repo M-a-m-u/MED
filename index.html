@@ -201,7 +201,7 @@ padding:12px;
 font-size:16px;
 border:none;
 border-radius:10px;
-background:#222;
+background:#0575d1;
 color:white;
 font-weight:bold;
 cursor:pointer;
@@ -222,13 +222,16 @@ cursor:pointer;
 }
 
 #historieButton{
-margin-top:15px;
-padding:10px;
-width:100%;
+margin-top:25px;
+padding:12px;
+font-size:16px;
 border:none;
-border-radius:8px;
-background:#333;
+border-radius:10px;
+background:#07810d;
 color:white;
+font-weight:bold;
+cursor:pointer;
+width:100%;
 }
 
 #zurueckZurApp{
@@ -241,6 +244,16 @@ background:#50d857;
 color:white;
 }
 
+#zurueckZurHistorie{
+margin-top:10px;
+padding:10px;
+width:100%;
+border:none;
+border-radius:8px;
+background:#444;
+color:white;
+}
+
 </style>
 
 </head>
@@ -250,7 +263,7 @@ color:white;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>063</h1>
+<h1>MED</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -259,6 +272,11 @@ color:white;
 <!-- Hauptseite -->
 
 <div id="mainPage">
+
+<div id="historieHinweis" style="display:none;background:#ffeeba;color:#333;padding:10px;border-radius:8px;margin-bottom:10px;">
+Du schaust gerade einen gespeicherten Arbeitstag an.
+<button id="zurueckZumAktuellenTag">Zurück zum aktuellen Arbeitstag</button>
+</div>    
 
 <h2>Arbeitstag</h2>
 
@@ -416,6 +434,7 @@ document.getElementById("schicht").addEventListener("change", function(){
 localStorage.setItem("schicht", this.value);
 });
 
+let aktuellerTag = null;
 
 let einsatzNummer = 0;
 
@@ -429,7 +448,10 @@ container.className = "einsatz";
 container.innerHTML = `
 <div class="einsatzHeader">
 <h3 class="einsatzTitel">Einsatz ${einsatzNummer}</h3>
+<div>
 <span class="toggleSymbol">▼</span>
+<span class="loeschenSymbol" style="margin-left:10px;cursor:pointer;color:red;">✖</span>
+</div>
 </div>
 
 <div class="einsatzInhalt">
@@ -500,6 +522,8 @@ symbol.textContent = "▶";
 
 });
 
+
+
 let adresseInput = container.querySelector(".adresseFeld");
 let titel = container.querySelector(".einsatzTitel");
 
@@ -512,6 +536,19 @@ titel.textContent = "Einsatz " + einsatzNummer;
 }
 
 });
+
+let loeschenButton = container.querySelector(".loeschenSymbol");
+
+loeschenButton.addEventListener("click", function(){
+
+container.remove();
+aktualisiereEinsatzNummern();
+
+});
+
+
+
+
 
 document.getElementById("einsatzListe").appendChild(container);
 
@@ -570,6 +607,20 @@ alert("Arbeitstag gespeichert.");
 
 });
 
+function aktualisiereEinsatzNummern(){
+
+let alleEinsaetze = document.querySelectorAll(".einsatz");
+
+alleEinsaetze.forEach(function(einsatz, index){
+
+let titel = einsatz.querySelector(".einsatzTitel");
+
+titel.textContent = "Einsatz " + (index + 1);
+
+});
+
+}
+
 function downloadJSON(daten){
 
 let json = JSON.stringify(daten, null, 2);
@@ -593,6 +644,8 @@ URL.revokeObjectURL(url);
 
 document.getElementById("historieButton").addEventListener("click", function(){
 
+aktuellerTag = speichereAktuellenTag();   
+
 document.getElementById("mainPage").style.display = "none";
 document.getElementById("historiePage").style.display = "block";
 
@@ -605,7 +658,22 @@ document.getElementById("zurueckZurApp").addEventListener("click", function(){
 document.getElementById("historiePage").style.display = "none";
 document.getElementById("mainPage").style.display = "block";
 
+if(aktuellerTag){
+ladeArbeitstag(aktuellerTag);
+}
+
 });
+
+document.getElementById("zurueckZumAktuellenTag").addEventListener("click", function(){
+
+document.getElementById("historieHinweis").style.display = "none";
+
+if(aktuellerTag){
+ladeArbeitstag(aktuellerTag);
+}
+
+});
+
 
 function ladeHistorie(){
 
@@ -639,6 +707,8 @@ function ladeArbeitstag(tag){
 
 document.getElementById("historiePage").style.display = "none";
 document.getElementById("mainPage").style.display = "block";
+
+document.getElementById("historieHinweis").style.display = "block";
 
 document.getElementById("datum").value = tag.datum;
 document.getElementById("schicht").value = tag.schicht;
@@ -725,6 +795,43 @@ document.getElementById("einsatzListe").appendChild(container);
 
 }
 
+
+function speichereAktuellenTag(){
+
+let arbeitstag = {};
+
+arbeitstag.datum = document.getElementById("datum").value;
+arbeitstag.schicht = document.getElementById("schicht").value;
+arbeitstag.wagen = document.getElementById("wagen").value;
+arbeitstag.kollege = document.getElementById("kollege").value;
+
+arbeitstag.einsaetze = [];
+
+let einsaetze = document.querySelectorAll(".einsatz");
+
+einsaetze.forEach(function(einsatz){
+
+let daten = {};
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+daten.einsatzart = inputs[0].value;
+daten.adresse = inputs[1].value;
+daten.melder = inputs[2].value;
+daten.meldung = inputs[3].value;
+daten.eintreffen = inputs[4].value;
+daten.abfahrt = inputs[5].value;
+daten.feststellung = inputs[6].value;
+daten.massnahmen = inputs[7].value;
+daten.bemerkung = inputs[8].value;
+
+arbeitstag.einsaetze.push(daten);
+
+});
+
+return arbeitstag;
+
+}
 
 </script>
 
