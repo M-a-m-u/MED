@@ -213,12 +213,39 @@ margin-top:20px;
 }
 
 .historieEintrag{
-background:white;
-color:black;
-padding:12px;
-border-radius:8px;
-margin-top:10px;
+text-align:left;
+margin:10px 12px;
+}
+
+.historieHeader{
 cursor:pointer;
+font-weight:bold;
+
+display:flex;
+gap:6px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.historieInhalt{
+padding-left:20px;
+margin-top:8px;
+}
+
+.historieEinsatz{
+text-align:left;
+margin-top:8px;
+}
+
+.historieEinsatzHeader{
+cursor:pointer;
+font-weight:bold;
+}
+
+.historieEinsatzInhalt{
+padding-left:20px;
+margin-top:6px;
 }
 
 #historieButton{
@@ -658,10 +685,6 @@ document.getElementById("zurueckZurApp").addEventListener("click", function(){
 document.getElementById("historiePage").style.display = "none";
 document.getElementById("mainPage").style.display = "block";
 
-if(aktuellerTag){
-ladeArbeitstag(aktuellerTag);
-}
-
 });
 
 document.getElementById("zurueckZumAktuellenTag").addEventListener("click", function(){
@@ -689,13 +712,92 @@ let div = document.createElement("div");
 
 div.className = "historieEintrag";
 
-div.innerText = tag.datum + " – " + tag.schicht + " – " + tag.einsaetze.length + " Einsätze";
+let d = tag.datum.split("-");
+let datumAnzeige = d[2] + "." + d[1] + "." + d[0];
 
-div.addEventListener("click", function(){
+div.innerHTML = `
+<div class="historieHeader">
+<span class="historiePfeil">▶</span>
+${datumAnzeige} – ${tag.schicht} – ${tag.wagen} – ${tag.kollege}
+</div>
+<div class="historieInhalt" style="display:none"></div>
+`;
 
-ladeArbeitstag(tag);
+
+
+let header = div.querySelector(".historieHeader");
+let inhalt = div.querySelector(".historieInhalt");
+let pfeil = div.querySelector(".historiePfeil");
+
+header.addEventListener("click", function(){
+
+if(inhalt.style.display === "none"){
+
+inhalt.style.display = "block";
+pfeil.textContent = "▼";
+
+inhalt.innerHTML = "";
+
+tag.einsaetze.forEach(function(e, index){
+
+let eintrag = document.createElement("div");
+
+eintrag.className = "historieEinsatz";
+
+eintrag.innerHTML = `
+<div class="historieEinsatzHeader">
+<span class="historiePfeil">▶</span>
+<b>Einsatz ${index + 1}</b> – ${e.einsatzart} – ${e.adresse}
+</div>
+
+<div class="historieEinsatzInhalt" style="display:none">
+
+<b>Melder:</b> ${e.melder}<br>
+<b>Meldung:</b> ${e.meldung}<br>
+<b>Eintreffen:</b> ${e.eintreffen}<br>
+<b>Abfahrt:</b> ${e.abfahrt}<br><br>
+
+<b>Feststellung:</b><br>
+${e.feststellung}<br><br>
+
+<b>Maßnahmen:</b><br>
+${e.massnahmen}<br><br>
+
+<b>Bemerkung:</b><br>
+${e.bemerkung}
+
+</div>
+`;
+
+let h = eintrag.querySelector(".historieEinsatzHeader");
+let c = eintrag.querySelector(".historieEinsatzInhalt");
+let p = eintrag.querySelector(".historiePfeil");
+
+h.addEventListener("click", function(){
+
+if(c.style.display === "none"){
+c.style.display = "block";
+p.textContent = "▼";
+}else{
+c.style.display = "none";
+p.textContent = "▶";
+}
 
 });
+
+inhalt.appendChild(eintrag);
+
+});
+
+}else{
+
+inhalt.style.display = "none";
+pfeil.textContent = "▶";
+
+}
+
+});
+
 
 liste.appendChild(div);
 
@@ -832,6 +934,21 @@ arbeitstag.einsaetze.push(daten);
 return arbeitstag;
 
 }
+
+function autoResizeTextarea(textarea){
+
+textarea.style.height = "auto";
+textarea.style.height = textarea.scrollHeight + "px";
+
+}
+
+document.addEventListener("input", function(e){
+
+if(e.target.tagName === "TEXTAREA"){
+autoResizeTextarea(e.target);
+}
+
+});
 
 </script>
 
