@@ -218,15 +218,29 @@ margin:10px 12px;
 }
 
 .historieHeader{
+
 cursor:pointer;
 font-weight:bold;
 
-display:flex;
+display:grid;
+grid-template-columns: 
+
+18px     /* Pfeil */
+95px    /* Datum */
+60px     /* Schicht */
+70px     /* Wagen */
+1fr;     /* Name */
+
 gap:6px;
+
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
+
+align-items:center;
+
 }
+
 
 .historieInhalt{
 padding-left:20px;
@@ -236,6 +250,7 @@ margin-top:8px;
 .historieEinsatz{
 text-align:left;
 margin-top:8px;
+margin-left: -18px;;
 }
 
 .historieEinsatzHeader{
@@ -279,6 +294,20 @@ border:none;
 border-radius:8px;
 background:#444;
 color:white;
+}
+
+.tagLoeschenButton{
+margin-top:10px;
+padding:8px;
+color:#c40000;
+font-weight:bold;
+cursor:pointer;
+}
+
+.historieLoeschenEinsatz{
+color:#c40000;
+margin-right:6px;
+cursor:pointer;
 }
 
 </style>
@@ -403,6 +432,16 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 <div id="historieListe"></div>
 
 <button id="zurueckZurApp">Zurück</button>
+
+<div class="jsonButtons">
+
+<button id="jsonSpeichern">JSON sichern</button>
+
+<button id="jsonLaden">JSON laden</button>
+
+</div>
+
+<input type="file" id="jsonDateiInput" accept=".json" style="display:none">
 
 </div>
 
@@ -701,6 +740,26 @@ document.getElementById("mainPage").style.display = "block";
 
 });
 
+document.getElementById("jsonSpeichern").addEventListener("click", function(){
+
+if(confirm("Backup der MED-Daten als JSON speichern?")){
+
+exportJSON();
+
+}
+
+});
+
+document.getElementById("jsonLaden").addEventListener("click", function(){
+
+if(confirm("JSON-Backup laden? Aktuelle Daten können überschrieben werden.")){
+
+document.getElementById("jsonDateiInput").click();
+
+}
+
+});
+
 document.getElementById("zurueckZumAktuellenTag").addEventListener("click", function(){
 
 document.getElementById("historieHinweis").style.display = "none";
@@ -716,11 +775,13 @@ function ladeHistorie(){
 
 let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
 
+archiv.sort((a,b)=> new Date(b.datum) - new Date(a.datum));
+
 let liste = document.getElementById("historieListe");
 
 liste.innerHTML = "";
 
-archiv.forEach(function(tag){
+archiv.forEach(function(tag, indexTag){
 
 let div = document.createElement("div");
 
@@ -731,9 +792,15 @@ let datumAnzeige = d[2] + "." + d[1] + "." + d[0];
 
 div.innerHTML = `
 <div class="historieHeader">
+
 <span class="historiePfeil">▶</span>
-${datumAnzeige} – ${tag.schicht} – ${tag.wagen} – ${tag.kollege}
+<span class="historieDatum">${datumAnzeige}</span>
+<span class="historieSchicht">${tag.schicht}</span>
+<span class="historieWagen">${tag.wagen}</span>
+<span class="historieName">${tag.kollege}</span>
+
 </div>
+
 <div class="historieInhalt" style="display:none"></div>
 `;
 
@@ -760,6 +827,7 @@ eintrag.className = "historieEinsatz";
 
 eintrag.innerHTML = `
 <div class="historieEinsatzHeader">
+<span class="historieLoeschenEinsatz">✖</span>
 <span class="historiePfeil">▶</span>
 <b>Einsatz ${index + 1}</b> – ${e.einsatzart} – ${e.adresse}
 </div>
@@ -786,6 +854,7 @@ ${e.bemerkung}
 let h = eintrag.querySelector(".historieEinsatzHeader");
 let c = eintrag.querySelector(".historieEinsatzInhalt");
 let p = eintrag.querySelector(".historiePfeil");
+let loesch = eintrag.querySelector(".historieLoeschenEinsatz");
 
 h.addEventListener("click", function(){
 
@@ -799,7 +868,49 @@ p.textContent = "▶";
 
 });
 
+loesch.addEventListener("click", function(event){
+
+event.stopPropagation();
+
+if(confirm("Diesen Einsatz wirklich löschen?")){
+
+let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+
+archiv[indexTag].einsaetze.splice(index,1);
+
+localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+
+ladeHistorie();
+
+}
+
+});
+
 inhalt.appendChild(eintrag);
+
+});
+
+let loeschButton = document.createElement("div");
+
+loeschButton.className = "tagLoeschenButton";
+
+loeschButton.textContent = "🗑 Arbeitstag löschen";
+
+inhalt.appendChild(loeschButton);
+
+loeschButton.addEventListener("click", function(){
+
+if(confirm("Diesen gesamten Arbeitstag wirklich löschen?")){
+
+let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+
+archiv.splice(indexTag, 1);
+
+localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+
+ladeHistorie();
+
+}
 
 });
 
@@ -961,6 +1072,68 @@ document.addEventListener("input", function(e){
 if(e.target.tagName === "TEXTAREA"){
 autoResizeTextarea(e.target);
 }
+
+});
+
+function exportJSON(){
+
+let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+
+if(archiv.length === 0){
+alert("Keine Daten zum Speichern vorhanden.");
+return;
+}
+
+let jsonString = JSON.stringify(archiv, null, 2);
+
+let blob = new Blob([jsonString], {type:"application/json"});
+
+let url = URL.createObjectURL(blob);
+
+let a = document.createElement("a");
+
+let datum = new Date().toISOString().split("T")[0];
+
+a.href = url;
+a.download = "MED_Backup_" + datum + ".json";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+}
+
+document.getElementById("jsonDateiInput").addEventListener("change", function(event){
+
+let file = event.target.files[0];
+
+if(!file){
+return;
+}
+
+let reader = new FileReader();
+
+reader.onload = function(e){
+
+try{
+
+let daten = JSON.parse(e.target.result);
+
+localStorage.setItem("MED_Archiv", JSON.stringify(daten));
+
+alert("Backup erfolgreich geladen.");
+
+ladeHistorie();
+
+}catch(error){
+
+alert("Fehler beim Laden der JSON-Datei.");
+
+}
+
+};
+
+reader.readAsText(file);
 
 });
 
