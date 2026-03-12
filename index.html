@@ -319,7 +319,7 @@ cursor:pointer;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>126</h1>
+<h1>127</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -496,6 +496,19 @@ let letzteSchicht = localStorage.getItem("schicht");
 
 if(letzteSchicht){
 document.getElementById("schicht").value = letzteSchicht;
+}
+
+let gespeicherterTag = localStorage.getItem("MED_AktuellerTag");
+
+if(gespeicherterTag){
+
+let arbeitstag = JSON.parse(gespeicherterTag);
+
+document.getElementById("datum").value = arbeitstag.datum;
+document.getElementById("schicht").value = arbeitstag.schicht;
+document.getElementById("wagen").value = arbeitstag.wagen;
+document.getElementById("kollege").value = arbeitstag.kollege;
+
 }
 
 }
