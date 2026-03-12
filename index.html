@@ -319,7 +319,7 @@ cursor:pointer;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>125</h1>
+<h1>126</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -625,6 +625,7 @@ container.remove();
 
 setTimeout(function(){
 aktualisiereEinsatzNummern();
+autoSpeichern();
 },0);
 
 });
@@ -700,6 +701,43 @@ let titel = einsatz.querySelector(".einsatzTitel");
 titel.textContent = "Einsatz " + (index + 1);
 
 });
+
+}
+
+function autoSpeichern(){
+
+let arbeitstag = {};
+
+arbeitstag.datum = document.getElementById("datum").value;
+arbeitstag.schicht = document.getElementById("schicht").value;
+arbeitstag.wagen = document.getElementById("wagen").value;
+arbeitstag.kollege = document.getElementById("kollege").value;
+
+arbeitstag.einsaetze = [];
+
+let einsaetze = document.querySelectorAll(".einsatz");
+
+einsaetze.forEach(function(einsatz){
+
+let daten = {};
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+daten.einsatzart = inputs[0].value;
+daten.adresse = inputs[1].value;
+daten.melder = inputs[2].value;
+daten.meldung = inputs[3].value;
+daten.eintreffen = inputs[4].value;
+daten.abfahrt = inputs[5].value;
+daten.feststellung = inputs[6].value;
+daten.massnahmen = inputs[7].value;
+daten.bemerkung = inputs[8].value;
+
+arbeitstag.einsaetze.push(daten);
+
+});
+
+localStorage.setItem("MED_AktuellerTag", JSON.stringify(arbeitstag));
 
 }
 
