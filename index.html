@@ -319,7 +319,7 @@ cursor:pointer;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>130</h1>
+<h1>132</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -509,8 +509,6 @@ document.getElementById("schicht").value = arbeitstag.schicht;
 document.getElementById("wagen").value = arbeitstag.wagen;
 document.getElementById("kollege").value = arbeitstag.kollege;
 
-}
-
 arbeitstag.einsaetze.forEach(function(e){
 
 let button = document.getElementById("neuerEinsatz");
@@ -532,6 +530,8 @@ inputs[7].value = e.massnahmen;
 inputs[8].value = e.bemerkung;
 
 });
+
+}
 
 }
 
