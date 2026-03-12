@@ -319,7 +319,7 @@ cursor:pointer;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>MED</h1>
+<h1>125</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -622,10 +622,12 @@ let loeschenButton = container.querySelector(".loeschenSymbol");
 loeschenButton.addEventListener("click", function(){
 
 container.remove();
+
+setTimeout(function(){
 aktualisiereEinsatzNummern();
+},0);
 
 });
-
 
 
 
@@ -875,7 +877,7 @@ event.stopPropagation();
 if(confirm("Diesen Einsatz wirklich löschen?")){
 
 let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
-
+archiv.sort((a,b)=> new Date(b.datum) - new Date(a.datum));
 archiv[indexTag].einsaetze.splice(index,1);
 
 localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
@@ -1078,6 +1080,7 @@ autoResizeTextarea(e.target);
 function exportJSON(){
 
 let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+archiv.sort((a,b)=> new Date(b.datum) - new Date(a.datum));
 
 if(archiv.length === 0){
 alert("Keine Daten zum Speichern vorhanden.");
