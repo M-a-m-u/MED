@@ -319,7 +319,7 @@ cursor:pointer;
 <!-- Cover -->
 
 <div id="cover" onclick="startApp()">
-<h1>127</h1>
+<h1>130</h1>
 <p>Mobiler Entstörungsdienst</p>
 <p>Tippen zum Starten</p>
 </div>
@@ -511,6 +511,28 @@ document.getElementById("kollege").value = arbeitstag.kollege;
 
 }
 
+arbeitstag.einsaetze.forEach(function(e){
+
+let button = document.getElementById("neuerEinsatz");
+button.click();
+
+let letzter = document.querySelectorAll(".einsatz");
+let einsatz = letzter[letzter.length - 1];
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+inputs[0].value = e.einsatzart;
+inputs[1].value = e.adresse;
+inputs[2].value = e.melder;
+inputs[3].value = e.meldung;
+inputs[4].value = e.eintreffen;
+inputs[5].value = e.abfahrt;
+inputs[6].value = e.feststellung;
+inputs[7].value = e.massnahmen;
+inputs[8].value = e.bemerkung;
+
+});
+
 }
 
 document.getElementById("wagen").addEventListener("change", function(){
@@ -647,6 +669,7 @@ autoSpeichern();
 
 
 document.getElementById("einsatzListe").appendChild(container);
+autoSpeichern();
 
 });
 
@@ -718,6 +741,8 @@ titel.textContent = "Einsatz " + (index + 1);
 }
 
 function autoSpeichern(){
+
+console.log("AUTOSAVE läuft");    
 
 let arbeitstag = {};
 
