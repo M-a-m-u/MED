@@ -329,6 +329,10 @@ cursor:pointer;
 
 <div id="mainPage">
 
+<div id="zurueckAktuellerTag" style="display:none; margin-bottom:10px; cursor:pointer;">
+↩ Zum aktuellen Arbeitstag zurück
+</div>    
+
 <div id="historieHinweis" style="display:none;background:#ffeeba;color:#333;padding:10px;border-radius:8px;margin-bottom:10px;">
 Du schaust gerade einen gespeicherten Arbeitstag an.
 <button id="zurueckZumAktuellenTag">Zurück zum aktuellen Arbeitstag</button>
@@ -813,6 +817,51 @@ ladeHistorie();
 
 });
 
+document.getElementById("zurueckAktuellerTag").addEventListener("click", function(){
+
+let gespeicherterTag = localStorage.getItem("MED_AktuellerTag");
+
+if(gespeicherterTag){
+
+let arbeitstag = JSON.parse(gespeicherterTag);
+
+document.getElementById("datum").value = arbeitstag.datum;
+document.getElementById("schicht").value = arbeitstag.schicht;
+document.getElementById("wagen").value = arbeitstag.wagen;
+document.getElementById("kollege").value = arbeitstag.kollege;
+
+document.getElementById("einsatzListe").innerHTML = "";
+
+einsatzNummer = 0;
+
+arbeitstag.einsaetze.forEach(function(e){
+
+let button = document.getElementById("neuerEinsatz");
+button.click();
+
+let letzter = document.querySelectorAll(".einsatz");
+let einsatz = letzter[letzter.length - 1];
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+inputs[0].value = e.einsatzart;
+inputs[1].value = e.adresse;
+inputs[2].value = e.melder;
+inputs[3].value = e.meldung;
+inputs[4].value = e.eintreffen;
+inputs[5].value = e.abfahrt;
+inputs[6].value = e.feststellung;
+inputs[7].value = e.massnahmen;
+inputs[8].value = e.bemerkung;
+
+});
+
+}
+
+document.getElementById("zurueckAktuellerTag").style.display = "none";
+
+});
+
 document.getElementById("zurueckZurApp").addEventListener("click", function(){
 
 document.getElementById("historiePage").style.display = "none";
@@ -970,6 +1019,22 @@ inhalt.appendChild(eintrag);
 
 });
 
+let bearbeitenButton = document.createElement("div");
+
+bearbeitenButton.className = "tagBearbeitenButton";
+
+bearbeitenButton.textContent = "✏️ Arbeitstag bearbeiten";
+
+inhalt.appendChild(bearbeitenButton);
+
+bearbeitenButton.addEventListener("click", function(){
+
+autoSpeichern();
+
+editorLadeArbeitstag(tag);
+
+});
+
 let loeschButton = document.createElement("div");
 
 loeschButton.className = "tagLoeschenButton";
@@ -1005,6 +1070,46 @@ pfeil.textContent = "▶";
 
 
 liste.appendChild(div);
+
+});
+
+}
+
+function editorLadeArbeitstag(tag){
+
+document.getElementById("zurueckAktuellerTag").style.display = "block";
+
+document.getElementById("historiePage").style.display = "none";
+document.getElementById("mainPage").style.display = "block";
+
+document.getElementById("datum").value = tag.datum;
+document.getElementById("schicht").value = tag.schicht;
+document.getElementById("wagen").value = tag.wagen;
+document.getElementById("kollege").value = tag.kollege;
+
+document.getElementById("einsatzListe").innerHTML = "";
+
+einsatzNummer = 0;
+
+tag.einsaetze.forEach(function(e){
+
+let button = document.getElementById("neuerEinsatz");
+button.click();
+
+let letzter = document.querySelectorAll(".einsatz");
+let einsatz = letzter[letzter.length - 1];
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+inputs[0].value = e.einsatzart;
+inputs[1].value = e.adresse;
+inputs[2].value = e.melder;
+inputs[3].value = e.meldung;
+inputs[4].value = e.eintreffen;
+inputs[5].value = e.abfahrt;
+inputs[6].value = e.feststellung;
+inputs[7].value = e.massnahmen;
+inputs[8].value = e.bemerkung;
 
 });
 
@@ -1183,6 +1288,12 @@ a.click();
 URL.revokeObjectURL(url);
 
 }
+
+setInterval(function(){
+
+autoSpeichern();
+
+}, 20000);
 
 document.getElementById("jsonDateiInput").addEventListener("change", function(event){
 
