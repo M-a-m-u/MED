@@ -310,6 +310,49 @@ margin-right:6px;
 cursor:pointer;
 }
 
+#aktuelleZeit{
+display:none;
+text-align:center;
+font-size:16px;
+margin:10px auto;
+padding:6px 12px;
+background:white;
+color:#222;
+border-radius:8px;
+}
+
+.arbeitstagTitel{
+position:relative;
+text-align:center;
+margin-bottom:10px;
+}
+
+.arbeitstagTitel h2{
+margin:0;
+}
+
+#toggleZeit{
+position:absolute;
+right:0;
+top:50%;
+transform:translateY(-50%);
+background:white;
+border:none;
+border-radius:6px;
+padding:4px 6px;
+font-size:14px;
+cursor:pointer;
+}
+
+#toggleZeit{
+background:white;
+border:none;
+border-radius:6px;
+padding:1px 2px;
+font-size:14px;
+cursor:pointer;
+}
+
 </style>
 
 </head>
@@ -338,7 +381,12 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 <button id="zurueckZumAktuellenTag">Zurück zum aktuellen Arbeitstag</button>
 </div>    
 
+<div class="arbeitstagTitel">
 <h2>Arbeitstag</h2>
+<button id="toggleZeit">🕒</button>
+</div>
+
+<div id="aktuelleZeit"></div>
 
 <div class="grid2">
 
@@ -381,11 +429,16 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 <input list="kollegenListe" id="kollege" placeholder="Kollege wählen">
 
 <datalist id="kollegenListe">
-<option value="Schischke">
-<option value="Tichelkamp">
-<option value="Stoll">
-<option value="Zöller">
 <option value="Dogan">
+    
+<option value="Oflas">
+<option value="Schischke">
+<option value="Stoll">
+
+<option value="Tichelkamp">
+
+<option value="Zöller">
+
 </datalist>
 
 <datalist id="einsatzartenListe">
@@ -682,6 +735,9 @@ document.getElementById("tagSpeichern").addEventListener("click", function(){
 let arbeitstag = {};
 
 arbeitstag.datum = document.getElementById("datum").value;
+
+console.log("Speichere Tag:", arbeitstag.datum);
+
 arbeitstag.schicht = document.getElementById("schicht").value;
 arbeitstag.wagen = document.getElementById("wagen").value;
 arbeitstag.kollege = document.getElementById("kollege").value;
@@ -1289,6 +1345,44 @@ URL.revokeObjectURL(url);
 
 }
 
+function aktualisiereZeit(){
+
+let jetzt = new Date();
+
+let datum = jetzt.toLocaleDateString("de-DE",{
+weekday:"long",
+day:"2-digit",
+month:"2-digit",
+year:"numeric"
+});
+
+let uhrzeit = jetzt.toLocaleTimeString("de-DE");
+
+document.getElementById("aktuelleZeit").textContent =
+datum + " – " + uhrzeit;
+
+}
+
+setInterval(aktualisiereZeit,1000);
+aktualisiereZeit();
+
+let zeitSichtbar = false;
+
+document.getElementById("toggleZeit").addEventListener("click", function(){
+
+let feld = document.getElementById("aktuelleZeit");
+
+zeitSichtbar = !zeitSichtbar;
+
+if(zeitSichtbar){
+feld.style.display = "inline-block";
+}else{
+feld.style.display = "none";
+}
+
+});
+
+
 setInterval(function(){
 
 autoSpeichern();
@@ -1328,6 +1422,8 @@ alert("Fehler beim Laden der JSON-Datei.");
 reader.readAsText(file);
 
 });
+
+
 
 </script>
 
