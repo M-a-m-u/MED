@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="IMG/med-icon.png">
+<link rel="apple-touch-icon" href="img/med-icon.png">
 
 <title>MED – Mobiler Entstörungsdienst</title>
 
@@ -597,6 +597,19 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 </div>
 
 <script>
+
+ let strassen = [];
+let aktuelleStrasse = null;
+
+fetch("duesseldorf_strassen.json")
+.then(r => r.json())
+.then(data => {
+
+strassen = data;
+
+console.log("Straßen geladen:", strassen.length);
+
+});   
 
 function startApp(){
 document.getElementById("cover").style.display="none";
