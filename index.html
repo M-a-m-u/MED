@@ -156,12 +156,24 @@ resize:none;
 overflow:hidden;
 }
 
-.einsatzFeld input{
+.einsatzFeld input,
+.einsatzFeld textarea{
 padding:10px;
 font-size:16px;
 border-radius:8px;
 border:1px solid #ccc;
 margin-top:4px;
+
+height: 40px;
+line-height: 20px;
+overflow: hidden;
+}
+
+.einsatzFeld textarea{
+font-family: inherit;
+line-height: 22px;
+height: 18px;
+resize: none;
 }
 
 .zeitGrid{
@@ -446,6 +458,20 @@ font-size:14px;
 cursor:pointer;
 }
 
+#vorschlaege{
+max-width:420px;
+background:white;
+}
+
+.vorschlag{
+padding:6px;
+cursor:pointer;
+}
+
+.vorschlag:hover{
+background:#f0f0f0;
+}
+
 </style>
 
 </head>
@@ -598,8 +624,45 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 
 <script>
 
- let strassen = [];
+let strassen = [];
 let aktuelleStrasse = null;
+
+function normalize(text){
+
+return text
+.toLowerCase()
+.replace(/ä/g,"ae")
+.replace(/ö/g,"oe")
+.replace(/ü/g,"ue")
+.replace(/ß/g,"ss");
+
+}
+
+function searchStreet(query){
+
+const q = normalize(query);
+
+let start = [];
+let middle = [];
+
+for(let s of strassen){
+
+const n = normalize(s.name);
+
+if(n.startsWith(q)){
+start.push(s);
+}
+else if(n.includes(q)){
+middle.push(s);
+}
+
+}
+
+return [...start, ...middle].slice(0,10);
+
+}
+
+
 
 fetch("duesseldorf_strassen.json")
 .then(r => r.json())
@@ -608,6 +671,8 @@ fetch("duesseldorf_strassen.json")
 strassen = data;
 
 console.log("Straßen geladen:", strassen.length);
+
+console.log(searchStreet("ret"));
 
 });   
 
@@ -777,7 +842,8 @@ container.innerHTML = `
 
 <div class="einsatzFeld">
 <label>Adresse</label>
-<input type="text" class="adresseFeld" placeholder="Straße / Hausnummer">
+<textarea class="adresseFeld" id="strasseInput" placeholder="Straße / Hausnummer" autocomplete="off"></textarea>
+<div id="vorschlaege"></div>
 </div>
 
 <div class="einsatzFeld">
@@ -1332,7 +1398,8 @@ container.innerHTML = `
 
 <div class="einsatzFeld">
 <label>Adresse</label>
-<input type="text" class="adresseFeld" value="${e.adresse}">
+<input type="text" class="adresseFeld" id="strasseInput" value="${e.adresse}">
+<div id="vorschlaege"></div>
 </div>
 
 <div class="einsatzFeld">
@@ -1422,10 +1489,8 @@ return arbeitstag;
 }
 
 function autoResizeTextarea(textarea){
-
 textarea.style.height = "auto";
-textarea.style.height = textarea.scrollHeight + "px";
-
+textarea.style.height = (textarea.scrollHeight - 20) + "px";
 }
 
 document.addEventListener("input", function(e){
@@ -1518,6 +1583,71 @@ setInterval(function(){
 autoSpeichern();
 
 }, 20000);
+
+document.addEventListener("input", function(e){
+
+if(!e.target.classList.contains("adresseFeld")) return;
+
+const input = e.target;
+const box = input.parentElement.querySelector("#vorschlaege");
+
+const full = input.value;
+const text = full.split(" ")[0];
+
+box.innerHTML = "";
+
+if(text.length < 2) return;
+
+let result = searchStreet(text);
+
+result.forEach(s=>{
+
+let div = document.createElement("div");
+
+div.className = "vorschlag";
+
+div.textContent = s.name+" — "+s.plz+" — "+s.stadtteil;
+
+div.onclick = ()=>{
+
+let parts = input.value.split(" ");
+let hausnr = parts.slice(1).join(" ");
+
+/* Adresse für Titel */
+
+let adresseTitel = s.name + (hausnr ? " " + hausnr : "");
+
+/* Adresse für Feld */
+
+let adresseFeld =
+adresseTitel + "\n" +
+s.plz + " " + s.stadtteil;
+
+/* Feld aktualisieren */
+
+input.value = adresseFeld;
+
+aktuelleStrasse = s;
+
+box.innerHTML = "";
+
+/* Einsatz Titel */
+
+let einsatz = input.closest(".einsatz");
+let titel = einsatz.querySelector(".einsatzTitel");
+
+titel.textContent =
+titel.textContent.split("–")[0].trim() +
+" – " +
+adresseTitel;
+
+};
+
+box.appendChild(div);
+
+});
+
+});
 
 document.getElementById("jsonDateiInput").addEventListener("change", function(event){
 
