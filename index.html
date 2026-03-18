@@ -472,6 +472,17 @@ cursor:pointer;
 background:#f0f0f0;
 }
 
+.navButton{
+margin-top:8px;
+padding:8px 12px;
+border:none;
+border-radius:8px;
+background:#2e7d32;
+color:white;
+font-size:14px;
+cursor:pointer;
+}
+
 </style>
 
 </head>
@@ -640,25 +651,26 @@ return text
 
 function searchStreet(query){
 
-const q = normalize(query);
+    console.log("NEUE SUCHE AKTIV:", query);
 
-let start = [];
-let middle = [];
+const words = normalize(query).split(" ");
+
+let results = [];
 
 for(let s of strassen){
 
-const n = normalize(s.name);
+const name = normalize(s.name);
 
-if(n.startsWith(q)){
-start.push(s);
-}
-else if(n.includes(q)){
-middle.push(s);
-}
+/* alle Wörter müssen enthalten sein */
+let match = words.every(w => name.includes(w));
 
+if(match){
+results.push(s);
 }
 
-return [...start, ...middle].slice(0,10);
+}
+
+return results.slice(0,10);
 
 }
 
@@ -671,8 +683,6 @@ fetch("duesseldorf_strassen.json")
 strassen = data;
 
 console.log("Straßen geladen:", strassen.length);
-
-console.log(searchStreet("ret"));
 
 });   
 
@@ -844,6 +854,7 @@ container.innerHTML = `
 <label>Adresse</label>
 <textarea class="adresseFeld" id="strasseInput" placeholder="Straße / Hausnummer" autocomplete="off"></textarea>
 <div id="vorschlaege"></div>
+<button class="navButton">Navigation</button>
 </div>
 
 <div class="einsatzFeld">
@@ -1592,13 +1603,39 @@ const input = e.target;
 const box = input.parentElement.querySelector("#vorschlaege");
 
 const full = input.value;
-const text = full.split(" ")[0];
+let parts = full.split(" ");
+
+let hausnummer = null;
+let strassenTeil = [];
+
+parts.forEach(p => {
+if(/\d/.test(p)){
+hausnummer = p;
+}else{
+strassenTeil.push(p);
+}
+});
+
+const text = strassenTeil.join(" ");
 
 box.innerHTML = "";
 
 if(text.length < 2) return;
 
 let result = searchStreet(text);
+
+if(hausnummer){
+result = result.filter(s => {
+
+let nr = parseInt(hausnummer);
+
+let inU = nr >= s.vonU && nr <= s.bisU;
+let inG = nr >= s.vonG && nr <= s.bisG;
+
+return inU || inG;
+
+});
+}
 
 result.forEach(s=>{
 
@@ -1610,8 +1647,8 @@ div.textContent = s.name+" — "+s.plz+" — "+s.stadtteil;
 
 div.onclick = ()=>{
 
-let parts = input.value.split(" ");
-let hausnr = parts.slice(1).join(" ");
+let hausnrMatch = input.value.match(/\d+\w*/);
+let hausnr = hausnrMatch ? hausnrMatch[0] : "";
 
 /* Adresse für Titel */
 
@@ -1683,7 +1720,33 @@ reader.readAsText(file);
 
 });
 
+window.addEventListener("load", () => {
 
+document.querySelectorAll("textarea").forEach(t => {
+autoResizeTextarea(t);
+});
+
+});
+
+document.addEventListener("click", function(e){
+
+if(!e.target.classList.contains("navButton")) return;
+
+let einsatz = e.target.closest(".einsatz");
+let feld = einsatz.querySelector(".adresseFeld");
+
+if(!feld.value) return;
+
+/* nur erste Zeile (Straße + Hausnummer) */
+let adresse = feld.value.split("\n")[0] + " Düsseldorf";
+
+/* URL bauen */
+let url = "http://maps.apple.com/?q=" + encodeURIComponent(adresse);
+
+/* öffnen */
+window.open(url);
+
+});
 
 </script>
 
