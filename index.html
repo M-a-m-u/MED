@@ -483,6 +483,39 @@ font-size:14px;
 cursor:pointer;
 }
 
+.navButtons button{
+  flex:1;                /* beide gleich breit */
+  padding:8px;           /* etwas flacher wie JSON-Buttons */
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  color:white;
+  text-align:center;
+  }
+
+.navButtons{
+  display:flex;
+  gap:12px;
+  margin-top:10px;
+  width:100%;
+}
+
+.navButtons button{
+  flex:1;
+}
+
+.einsatzFeld .navButtons{
+  width:100%;
+}
+
+.navApple{
+  background:#007aff;
+}
+
+.navGoogle{
+  background:#34a853;
+}
+
 </style>
 
 </head>
@@ -854,7 +887,10 @@ container.innerHTML = `
 <label>Adresse</label>
 <textarea class="adresseFeld" id="strasseInput" placeholder="Straße / Hausnummer" autocomplete="off"></textarea>
 <div id="vorschlaege"></div>
-<button class="navButton">Navigation</button>
+<div class="navButtons">
+  <button class="navApple">Apple Karten</button>
+  <button class="navGoogle">Google Maps</button>
+</div>
 </div>
 
 <div class="einsatzFeld">
@@ -1730,7 +1766,7 @@ autoResizeTextarea(t);
 
 document.addEventListener("click", function(e){
 
-if(!e.target.classList.contains("navButton")) return;
+if(!e.target.classList.contains("navApple")) return;
 
 let einsatz = e.target.closest(".einsatz");
 let feld = einsatz.querySelector(".adresseFeld");
@@ -1738,12 +1774,39 @@ let feld = einsatz.querySelector(".adresseFeld");
 if(!feld.value) return;
 
 /* nur erste Zeile (Straße + Hausnummer) */
-let adresse = feld.value.split("\n")[0] + " Düsseldorf";
+let zeilen = feld.value.split("\n");
+
+let strasse = zeilen[0];
+let plzOrt = zeilen[1];
+
+let adresse = strasse + ", " + plzOrt;
 
 /* URL bauen */
 let url = "http://maps.apple.com/?q=" + encodeURIComponent(adresse);
 
 /* öffnen */
+window.open(url);
+
+});
+
+document.addEventListener("click", function(e){
+
+if(!e.target.classList.contains("navGoogle")) return;
+
+let einsatz = e.target.closest(".einsatz");
+let feld = einsatz.querySelector(".adresseFeld");
+
+if(!feld.value) return;
+
+let zeilen = feld.value.split("\n");
+
+let strasse = zeilen[0];
+let plzOrt = zeilen[1];
+
+let adresse = strasse + ", " + plzOrt;
+
+let url = "https://www.google.com/maps?q=" + encodeURIComponent(adresse);
+
 window.open(url);
 
 });
