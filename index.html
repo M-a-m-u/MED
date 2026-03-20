@@ -245,6 +245,17 @@ line-height: 1.2;
   padding-left: 10px;
 }
 
+.lockBtn{
+  cursor:pointer;
+  margin-left:10px;
+  font-size:18px;
+
+  background:none;
+  border:none;
+  padding:0;
+}
+
+
 #tagSpeichern{
 margin-top:25px;
 padding:12px;
@@ -704,6 +715,9 @@ return text
 
 }
 
+const LOESCH_PIN = "2410";
+
+
 function searchStreet(query){
 
     console.log("NEUE SUCHE AKTIV:", query);
@@ -894,6 +908,9 @@ container.innerHTML = `
 <h3 class="einsatzTitel">Einsatz ${einsatzNummer}</h3>
 <div>
 <span class="toggleSymbol">▼</span>
+
+<button class="lockBtn" style="margin-left:10px;cursor:pointer;">🔓</button>
+
 <span class="loeschenSymbol" style="margin-left:10px;cursor:pointer;color:red;">✖</span>
 </div>
 </div>
@@ -956,6 +973,25 @@ container.innerHTML = `
 </div>
 `;
 
+let gesperrt = false;
+
+const lockBtn = container.querySelector(".lockBtn");
+const felder = container.querySelectorAll("input, textarea");
+
+lockBtn.addEventListener("click", function(e){
+
+  e.stopPropagation(); // ⬅️ DAS ist der entscheidende Fix
+
+  gesperrt = !gesperrt;
+
+  felder.forEach(f => {
+    f.disabled = gesperrt;
+  });
+
+lockBtn.textContent = gesperrt ? "🔒" : "✏️";
+
+});
+
 container.querySelector(".einsatzHeader").addEventListener("click", function(){
 
 let inhalt = container.querySelector(".einsatzInhalt");
@@ -1001,13 +1037,23 @@ let loeschenButton = container.querySelector(".loeschenSymbol");
 
 loeschenButton.addEventListener("click", function(){
 
-if(confirm("Diesen Einsatz wirklich löschen?")){
+  if(confirm("Diesen Einsatz wirklich löschen?")){
 
-container.remove();
-aktualisiereEinsatzNummern();
-autoSpeichern();
+    let pin = prompt("Bitte PIN eingeben:");
 
-}
+    if(pin === LOESCH_PIN){
+
+      container.remove();
+      aktualisiereEinsatzNummern();
+      autoSpeichern();
+
+    } else {
+
+      alert("Falscher PIN oder Vorgang abgebrochen");
+
+    }
+
+  }
 
 });
 
@@ -1356,7 +1402,14 @@ inhalt.appendChild(loeschButton);
 
 loeschButton.addEventListener("click", function(){
 
-if(confirm("Diesen gesamten Arbeitstag wirklich löschen?")){
+
+
+if(confirm("Diesen Arbeitstag wirklich löschen?")){
+
+  let pin = prompt("Bitte PIN eingeben:");
+
+  if(pin !== "2410") return; // deinen PIN kannst du anpassen
+
 
 let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
 
