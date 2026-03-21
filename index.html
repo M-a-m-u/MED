@@ -491,6 +491,24 @@ font-size:14px;
 cursor:pointer;
 }
 
+#homeNav{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  padding:0;
+  cursor:pointer;
+}
+
+#homeNav img{
+  height:26px;
+  width:auto;
+  display:block;
+  border-radius:6px;
+}
+
 #vorschlaege{
 max-width:420px;
 background:white;
@@ -580,6 +598,9 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 <div class="arbeitstagTitel">
 <h2>Arbeitstag</h2>
 <button id="toggleZeit">🕒</button>
+<button id="homeNav">
+  <img src="IMG/home.png" alt="Home">
+</button>
 </div>
 
 <div id="aktuelleZeit"></div>
@@ -1026,9 +1047,21 @@ let titel = container.querySelector(".einsatzTitel");
 adresseInput.addEventListener("input", function(){
 
 if(this.value.trim() !== ""){
-titel.textContent = "Einsatz " + einsatzNummer + " – " + this.value;
+
+  let einsatz = this.closest(".einsatz");
+
+  if(einsatz.dataset.adresseTitel){
+    titel.innerHTML =
+      "Einsatz " + einsatzNummer +
+      "<br><span class='einsatzAdresse'>" +
+      einsatz.dataset.adresseTitel +
+      "</span>";
+  }else{
+    titel.textContent = "Einsatz " + einsatzNummer;
+  }
+
 }else{
-titel.textContent = "Einsatz " + einsatzNummer;
+  titel.textContent = "Einsatz " + einsatzNummer;
 }
 
 });
@@ -1810,11 +1843,27 @@ reader.onload = function(e){
 
 try{
 
-let daten = JSON.parse(e.target.result);
+let neueDaten = JSON.parse(e.target.result);
 
-localStorage.setItem("MED_Archiv", JSON.stringify(daten));
+// 🔽 bestehende Daten holen
+let bestehend = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
 
-alert("Backup erfolgreich geladen.");
+// 🔽 für schnellen Vergleich: vorhandene Daten merken
+let vorhandeneDaten = bestehend.map(tag => tag.datum);
+
+// 🔽 nur neue Tage hinzufügen
+neueDaten.forEach(neuerTag => {
+
+  if(!vorhandeneDaten.includes(neuerTag.datum)){
+    bestehend.push(neuerTag);
+  }
+
+});
+
+// 🔽 speichern
+localStorage.setItem("MED_Archiv", JSON.stringify(bestehend));
+
+alert("Daten erfolgreich zusammengeführt.");
 
 ladeHistorie();
 
@@ -1882,6 +1931,19 @@ let adresse = strasse + ", " + plzOrt;
 let url = "https://www.google.com/maps?q=" + encodeURIComponent(adresse);
 
 window.open(url);
+
+});
+
+document.getElementById("homeNav").addEventListener("click", function(){
+
+  const adresse = "Höherweg 200, 40233 Düsseldorf"; // ← HIER anpassen
+
+const url = "https://www.google.com/maps/dir/?api=1&destination=" 
+  + encodeURIComponent(adresse) 
+  + "&travelmode=driving&dir_action=navigate";
+
+
+  window.open(url);
 
 });
 
