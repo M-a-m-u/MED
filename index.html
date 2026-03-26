@@ -646,11 +646,14 @@ Du schaust gerade einen gespeicherten Arbeitstag an.
 <input list="kollegenListe" id="kollege" placeholder="Kollege wählen">
 
 <datalist id="kollegenListe">
-<option value="Dogan">  
+<option value="Dogan">
+    
 <option value="Oflas">
 <option value="Schischke">
 <option value="Stoll">
+
 <option value="Tichelkamp">
+
 <option value="Zöller">
 
 </datalist>
@@ -783,88 +786,118 @@ document.getElementById("mainPage").style.display="block";
 
 window.onload = function(){
 
-    let heute = new Date().toISOString().split("T")[0];
-    document.getElementById("datum").value = heute;
+let heute = new Date().toISOString().split("T")[0];
+document.getElementById("datum").value = heute;
 
-    // Deine bestehenden Event-Listener für Datum-Change etc. bleiben hier...
+document.getElementById("datum").addEventListener("change", function(){
 
-    // Lade letzte Einstellungen
-    ["wagen", "kollege", "schicht"].forEach(k => {
-        let val = localStorage.getItem(k);
-        if(val) document.getElementById(k).value = val;
-    });
+let heute = new Date().toISOString().split("T")[0];
 
-    // JETZT DER STABILE LADE-PROZESS:
-    let gespeicherterTag = localStorage.getItem("MED_AktuellerTag");
+if(this.value !== heute){
 
-    if(gespeicherterTag){
-        let arbeitstag = JSON.parse(gespeicherterTag);
-        
-        // WICHTIG: Die ID zurückholen!
-        aktuelleSchichtID = arbeitstag.id || null; 
-
-        document.getElementById("datum").value = arbeitstag.datum;
-        document.getElementById("schicht").value = arbeitstag.schicht;
-        document.getElementById("wagen").value = arbeitstag.wagen;
-        document.getElementById("kollege").value = arbeitstag.kollege;
-
-        // Wir leeren die Liste zuerst, um sicherzugehen
-        document.getElementById("einsatzListe").innerHTML = "";
-        einsatzNummer = 0;
-
-        // Wir gehen jeden gespeicherten Einsatz durch
-        arbeitstag.einsaetze.forEach(function(e, index){
-            
-            // 1. Erstelle einen neuen leeren Einsatz (löst den Klick-Event aus)
-            document.getElementById("neuerEinsatz").click();
-            
-            // 2. Greife den gerade eben erstellten Einsatz (den letzten in der Liste)
-            let alleEinsaetze = document.querySelectorAll(".einsatz");
-            let einsatzElement = alleEinsaetze[alleEinsaetze.length - 1];
-            
-            // 3. Fülle die Felder direkt aus dem Speicher 'e'
-            let inputs = einsatzElement.querySelectorAll("input, textarea");
-            
-            if (inputs.length >= 9) {
-                inputs[0].value = e.einsatzart || "";
-                inputs[1].value = e.adresse || "";
-                inputs[2].value = e.melder || "";
-                inputs[3].value = e.meldung || "";
-                inputs[4].value = e.eintreffen || "";
-                inputs[5].value = e.abfahrt || "";
-                inputs[6].value = e.feststellung || "";
-                inputs[7].value = e.massnahmen || "";
-                inputs[8].value = e.bemerkung || "";
-                
-                // WICHTIG: Header aktualisieren, damit die Straße erscheint!
-                // Wir nutzen hier direkt die Logik aus deinem neuen Header-Fix
-                let t = einsatzElement.querySelector(".einsatzTitel");
-                let adr = (e.adresse || "").split('\n')[0].trim();
-                let nummer = index + 1;
-                if(adr !== "") {
-                    t.innerHTML = "Einsatz " + nummer + "<br><span class='einsatzAdresse'>" + adr + "</span>";
-                } else {
-                    t.textContent = "Einsatz " + nummer;
-                }
-            }
-        });
-
-        // Alle zuklappen, außer dem letzten
-        let alle = document.querySelectorAll(".einsatz");
-        alle.forEach(function(e, idx){
-            let inhalt = e.querySelector(".einsatzInhalt");
-            let symbol = e.querySelector(".toggleSymbol");
-            if(idx === alle.length - 1 && alle.length > 0) {
-                inhalt.style.display = "block";
-                symbol.textContent = "▼";
-            } else {
-                inhalt.style.display = "none";
-                symbol.textContent = "▶";
-            }
-        });
-    }
+if(!confirm("⚠ Achtung:\n\nDas gewählte Datum ist nicht heute.\n\nMöchtest du wirklich einen Arbeitstag für dieses Datum beginnen?")){
+this.value = heute;
+return;
 }
 
+}
+
+let bestaetigung = confirm("Neuen Arbeitstag beginnen? Alle aktuellen Einsätze werden gelöscht.");
+
+if(bestaetigung){
+
+document.getElementById("einsatzListe").innerHTML = "";
+einsatzNummer = 0;
+
+}
+
+});
+
+/* letzten Wagen laden */
+
+let letzterWagen = localStorage.getItem("wagen");
+
+if(letzterWagen){
+document.getElementById("wagen").value = letzterWagen;
+}
+
+
+/* letzten Kollegen laden */
+
+let letzterKollege = localStorage.getItem("kollege");
+
+if(letzterKollege){
+document.getElementById("kollege").value = letzterKollege;
+}
+
+/* letzte Schicht laden */
+
+let letzteSchicht = localStorage.getItem("schicht");
+
+if(letzteSchicht){
+document.getElementById("schicht").value = letzteSchicht;
+}
+
+let gespeicherterTag = localStorage.getItem("MED_AktuellerTag");
+
+if(gespeicherterTag){
+
+let arbeitstag = JSON.parse(gespeicherterTag);
+
+document.getElementById("datum").value = arbeitstag.datum;
+document.getElementById("schicht").value = arbeitstag.schicht;
+document.getElementById("wagen").value = arbeitstag.wagen;
+document.getElementById("kollege").value = arbeitstag.kollege;
+
+arbeitstag.einsaetze.forEach(function(e){
+
+let button = document.getElementById("neuerEinsatz");
+button.click();
+
+let letzter = document.querySelectorAll(".einsatz");
+let einsatz = letzter[letzter.length - 1];
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+inputs[0].value = e.einsatzart;
+inputs[1].value = e.adresse;
+inputs[2].value = e.melder;
+inputs[3].value = e.meldung;
+inputs[4].value = e.eintreffen;
+inputs[5].value = e.abfahrt;
+inputs[6].value = e.feststellung;
+inputs[7].value = e.massnahmen;
+inputs[8].value = e.bemerkung;
+
+});
+
+let alleEinsaetze = document.querySelectorAll(".einsatz");
+
+alleEinsaetze.forEach(function(e){
+
+let inhalt = e.querySelector(".einsatzInhalt");
+let symbol = e.querySelector(".toggleSymbol");
+
+inhalt.style.display = "none";
+symbol.textContent = "▶";
+
+});
+
+if(alleEinsaetze.length > 0){
+
+let letzter = alleEinsaetze[alleEinsaetze.length - 1];
+
+let inhalt = letzter.querySelector(".einsatzInhalt");
+let symbol = letzter.querySelector(".toggleSymbol");
+
+inhalt.style.display = "block";
+symbol.textContent = "▼";
+
+}
+
+}
+
+}
 
 document.getElementById("wagen").addEventListener("change", function(){
 localStorage.setItem("wagen", this.value);
@@ -881,8 +914,6 @@ localStorage.setItem("schicht", this.value);
 });
 
 let aktuellerTag = null;
-let aktuelleSchichtID = null; 
-
 
 let einsatzNummer = 0;
 
@@ -984,39 +1015,29 @@ lockBtn.textContent = gesperrt ? "🔒" : "✏️";
 
 container.querySelector(".einsatzHeader").addEventListener("click", function(){
 
-    let inhalt = container.querySelector(".einsatzInhalt");
-    let symbol = container.querySelector(".toggleSymbol");
-    let istOffen = inhalt.style.display === "block";
+let inhalt = container.querySelector(".einsatzInhalt");
+let symbol = container.querySelector(".toggleSymbol");
 
-    // Alle Einsätze durchgehen
-    let alle = document.querySelectorAll(".einsatz");
+let istOffen = inhalt.style.display === "block";
 
-    alle.forEach(function(e, index){
-        let i = e.querySelector(".einsatzInhalt");
-        let s = e.querySelector(".toggleSymbol");
-        let t = e.querySelector(".einsatzTitel");
-        let adr = e.querySelector(".adresseFeld").value.split('\n')[0].trim();
+let alle = document.querySelectorAll(".einsatz");
 
-        // Zuklappen
-        i.style.display = "none";
-        s.textContent = "▶";
+alle.forEach(function(e){
 
-        // TITEL-REPARATUR: Hier stellen wir sicher, dass die Adresse stehen bleibt
-        let nummer = index + 1;
-        if(adr !== "") {
-            t.innerHTML = "Einsatz " + nummer + "<br><span class='einsatzAdresse'>" + adr + "</span>";
-        } else {
-            t.textContent = "Einsatz " + nummer;
-        }
-    });
+let i = e.querySelector(".einsatzInhalt");
+let s = e.querySelector(".toggleSymbol");
 
-    // Den angeklickten Einsatz öffnen, falls er vorher zu war
-    if(!istOffen){
-        inhalt.style.display = "block";
-        symbol.textContent = "▼";
-    }
+i.style.display = "none";
+s.textContent = "▶";
+
 });
 
+if(!istOffen){
+inhalt.style.display = "block";
+symbol.textContent = "▼";
+}
+
+});
 
 
 
@@ -1079,24 +1100,59 @@ autoSpeichern();
 
 document.getElementById("tagSpeichern").addEventListener("click", function(){
 
-    let arbeitstag = speichereAktuellenTag();
+let arbeitstag = {};
 
-    let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+arbeitstag.datum = document.getElementById("datum").value;
 
-    // Wir suchen im Archiv nicht mehr nach dem Datum, sondern nach der eindeutigen ID
-    let index = archiv.findIndex(tag => tag.id === arbeitstag.id);
+console.log("Speichere Tag:", arbeitstag.datum);
 
-    if(index !== -1){
-        archiv[index] = arbeitstag; // Bestehende Schicht aktualisieren
-    }else{
-        archiv.push(arbeitstag); // Neue Schicht hinzufügen
-    }
+arbeitstag.schicht = document.getElementById("schicht").value;
+arbeitstag.wagen = document.getElementById("wagen").value;
+arbeitstag.kollege = document.getElementById("kollege").value;
 
-    localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+arbeitstag.einsaetze = [];
 
-    alert("Arbeitstag sicher gespeichert (ID: " + arbeitstag.id + ")");
+let einsaetze = document.querySelectorAll(".einsatz");
+
+einsaetze.forEach(function(einsatz){
+
+let daten = {};
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+daten.einsatzart = inputs[0].value;
+daten.adresse = inputs[1].value;
+daten.melder = inputs[2].value;
+daten.meldung = inputs[3].value;
+daten.eintreffen = inputs[4].value;
+daten.abfahrt = inputs[5].value;
+daten.feststellung = inputs[6].value;
+daten.massnahmen = inputs[7].value;
+daten.bemerkung = inputs[8].value;
+
+arbeitstag.einsaetze.push(daten);
+
 });
 
+let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+
+let index = archiv.findIndex(tag => tag.datum === arbeitstag.datum);
+
+if(index !== -1){
+
+archiv[index] = arbeitstag;
+
+}else{
+
+archiv.push(arbeitstag);
+
+}
+
+localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+
+alert("Arbeitstag gespeichert.");
+
+});
 
 function aktualisiereEinsatzNummern(){
 
@@ -1115,12 +1171,43 @@ einsatzNummer = alleEinsaetze.length;
 }
 
 function autoSpeichern(){
-    console.log("AUTOSAVE läuft");    
-    // Wir nutzen einfach die neue, sichere Funktion:
-    let stand = speichereAktuellenTag();
-    localStorage.setItem("MED_AktuellerTag", JSON.stringify(stand));
-}
 
+console.log("AUTOSAVE läuft");    
+
+let arbeitstag = {};
+
+arbeitstag.datum = document.getElementById("datum").value;
+arbeitstag.schicht = document.getElementById("schicht").value;
+arbeitstag.wagen = document.getElementById("wagen").value;
+arbeitstag.kollege = document.getElementById("kollege").value;
+
+arbeitstag.einsaetze = [];
+
+let einsaetze = document.querySelectorAll(".einsatz");
+
+einsaetze.forEach(function(einsatz){
+
+let daten = {};
+
+let inputs = einsatz.querySelectorAll("input, textarea");
+
+daten.einsatzart = inputs[0].value;
+daten.adresse = inputs[1].value;
+daten.melder = inputs[2].value;
+daten.meldung = inputs[3].value;
+daten.eintreffen = inputs[4].value;
+daten.abfahrt = inputs[5].value;
+daten.feststellung = inputs[6].value;
+daten.massnahmen = inputs[7].value;
+daten.bemerkung = inputs[8].value;
+
+arbeitstag.einsaetze.push(daten);
+
+});
+
+localStorage.setItem("MED_AktuellerTag", JSON.stringify(arbeitstag));
+
+}
 
 function downloadJSON(daten){
 
@@ -1387,13 +1474,7 @@ liste.appendChild(div);
 
 function editorLadeArbeitstag(tag){
 
-    // WICHTIG: Die ID des alten Tages übernehmen, damit wir ihn überschreiben 
-    // und nicht neu anlegen!
-    aktuelleSchichtID = tag.id; 
-
-    document.getElementById("zurueckAktuellerTag").style.display = "block";
-    // ... restliche Funktion bleibt gleich
-
+document.getElementById("zurueckAktuellerTag").style.display = "block";
 
 document.getElementById("historiePage").style.display = "none";
 document.getElementById("mainPage").style.display = "block";
@@ -1527,44 +1608,40 @@ document.getElementById("einsatzListe").appendChild(container);
 
 function speichereAktuellenTag(){
 
-    let arbeitstag = {};
+let arbeitstag = {};
 
-    // Wenn wir noch keine ID für diese Sitzung haben, erstellen wir eine neue
-    // Diese setzt sich aus dem Datum und der exakten Uhrzeit des Starts zusammen
-    if (!aktuelleSchichtID) {
-        aktuelleSchichtID = document.getElementById("datum").value + "_" + Date.now();
-    }
+arbeitstag.datum = document.getElementById("datum").value;
+arbeitstag.schicht = document.getElementById("schicht").value;
+arbeitstag.wagen = document.getElementById("wagen").value;
+arbeitstag.kollege = document.getElementById("kollege").value;
 
-    arbeitstag.id = aktuelleSchichtID; // Die ID wird im Objekt gespeichert
-    arbeitstag.datum = document.getElementById("datum").value;
-    arbeitstag.schicht = document.getElementById("schicht").value;
-    arbeitstag.wagen = document.getElementById("wagen").value;
-    arbeitstag.kollege = document.getElementById("kollege").value;
+arbeitstag.einsaetze = [];
 
-    arbeitstag.einsaetze = [];
+let einsaetze = document.querySelectorAll(".einsatz");
 
-    let einsaetze = document.querySelectorAll(".einsatz");
+einsaetze.forEach(function(einsatz){
 
-    einsaetze.forEach(function(einsatz){
-        let daten = {};
-        let inputs = einsatz.querySelectorAll("input, textarea");
+let daten = {};
 
-        daten.einsatzart = inputs[0].value;
-        daten.adresse = inputs[1].value;
-        daten.melder = inputs[2].value;
-        daten.meldung = inputs[3].value;
-        daten.eintreffen = inputs[4].value;
-        daten.abfahrt = inputs[5].value;
-        daten.feststellung = inputs[6].value;
-        daten.massnahmen = inputs[7].value;
-        daten.bemerkung = inputs[8].value;
+let inputs = einsatz.querySelectorAll("input, textarea");
 
-        arbeitstag.einsaetze.push(daten);
-    });
+daten.einsatzart = inputs[0].value;
+daten.adresse = inputs[1].value;
+daten.melder = inputs[2].value;
+daten.meldung = inputs[3].value;
+daten.eintreffen = inputs[4].value;
+daten.abfahrt = inputs[5].value;
+daten.feststellung = inputs[6].value;
+daten.massnahmen = inputs[7].value;
+daten.bemerkung = inputs[8].value;
 
-    return arbeitstag;
+arbeitstag.einsaetze.push(daten);
+
+});
+
+return arbeitstag;
+
 }
-
 
 function autoResizeTextarea(textarea){
 textarea.style.height = "auto";
