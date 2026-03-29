@@ -784,120 +784,110 @@ document.getElementById("mainPage").style.display="block";
 
 /* Datum automatisch setzen */
 
-window.onload = function(){
+window.onload = function() {
 
-let heute = new Date().toISOString().split("T")[0];
-document.getElementById("datum").value = heute;
+    // 1. Datum auf heute setzen
+    let heute = new Date().toISOString().split("T")[0];
+    let datumInput = document.getElementById("datum");
+    
+    // Wir merken uns das Datum beim Laden, um Änderungen zu prüfen
+    if (!datumInput.value) {
+        datumInput.value = heute;
+    }
 
-document.getElementById("datum").addEventListener("change", function(){
+    // --- DIE SICHERHEITSABFRAGE BEIM DATUM-WECHSEL ---
+    datumInput.addEventListener("change", function() {
+        let gewaehltesDatum = this.value;
+        let aktuellHeute = new Date().toISOString().split("T")[0];
 
-let heute = new Date().toISOString().split("T")[0];
+        // Check: Liegt das Datum in der Vergangenheit?
+        if (gewaehltesDatum < aktuellHeute) {
+            if (!confirm("⚠ Achtung:\n\nDas gewählte Datum liegt in der Vergangenheit.\n\nMöchtest du wirklich einen Arbeitstag für dieses Datum beginnen?")) {
+                this.value = aktuellHeute;
+                return;
+            }
+        }
 
-if(this.value !== heute){
+        // Check: Neuen Tag leeren?
+        if (confirm("Neuen Arbeitstag beginnen? Alle aktuellen Einsätze auf dem Bildschirm werden gelöscht.")) {
+            document.getElementById("einsatzListe").innerHTML = "";
+            einsatzNummer = 0;
+            // Wir leeren auch den Speicher für den "aktuellen Tag", damit nichts Altes lädt
+            localStorage.removeItem("MED_AktuellerTag");
+            alert("Felder wurden geleert. Du kannst jetzt neu starten.");
+        }
+    });
 
-if(!confirm("⚠ Achtung:\n\nDas gewählte Datum ist nicht heute.\n\nMöchtest du wirklich einen Arbeitstag für dieses Datum beginnen?")){
-this.value = heute;
-return;
-}
+    // 2. Vorhandene Daten laden (Wagen, Kollege, Schicht)
+    let letzterWagen = localStorage.getItem("wagen");
+    if (letzterWagen) document.getElementById("wagen").value = letzterWagen;
 
-}
+    let letzterKollege = localStorage.getItem("kollege");
+    if (letzterKollege) document.getElementById("kollege").value = letzterKollege;
 
-let bestaetigung = confirm("Neuen Arbeitstag beginnen? Alle aktuellen Einsätze werden gelöscht.");
+    let letzteSchicht = localStorage.getItem("schicht");
+    if (letzteSchicht) document.getElementById("schicht").value = letzteSchicht;
 
-if(bestaetigung){
+    // 3. Den gespeicherten Arbeitstag wiederherstellen
+    let gespeicherterTag = localStorage.getItem("MED_AktuellerTag");
 
-document.getElementById("einsatzListe").innerHTML = "";
-einsatzNummer = 0;
+    if (gespeicherterTag) {
+        let arbeitstag = JSON.parse(gespeicherterTag);
 
-}
+        // Nur laden, wenn das Datum im Speicher zum Feld passt
+        datumInput.value = arbeitstag.datum;
+        document.getElementById("schicht").value = arbeitstag.schicht;
+        document.getElementById("wagen").value = arbeitstag.wagen;
+        document.getElementById("kollege").value = arbeitstag.kollege;
 
-});
+        // Einsätze aufbauen
+        arbeitstag.einsaetze.forEach(function(e, index) {
+            let button = document.getElementById("neuerEinsatz");
+            if (button) button.click();
 
-/* letzten Wagen laden */
+            let alleEinsaetze = document.querySelectorAll(".einsatz");
+            let einsatz = alleEinsaetze[alleEinsaetze.length - 1];
+            let inputs = einsatz.querySelectorAll("input, textarea");
 
-let letzterWagen = localStorage.getItem("wagen");
+            // Felder füllen
+            if(inputs[0]) inputs[0].value = e.einsatzart || "";
+            if(inputs[1]) inputs[1].value = e.adresse || "";
+            if(inputs[2]) inputs[2].value = e.melder || "";
+            if(inputs[3]) inputs[3].value = e.meldung || "";
+            if(inputs[4]) inputs[4].value = e.eintreffen || "";
+            if(inputs[5]) inputs[5].value = e.abfahrt || "";
+            if(inputs[6]) inputs[6].value = e.feststellung || "";
+            if(inputs[7]) inputs[7].value = e.massnahmen || "";
+            if(inputs[8]) inputs[8].value = e.bemerkung || "";
 
-if(letzterWagen){
-document.getElementById("wagen").value = letzterWagen;
-}
+            // Straßen-Titel nach 50ms wiederherstellen
+            if (e.headerTitel) {
+                setTimeout(function() {
+                    let titelElement = einsatz.querySelector(".einsatzTitel");
+                    if (titelElement) {
+                        titelElement.innerHTML = e.headerTitel;
+                    }
+                }, 50);
+            }
+        });
 
+        // Alle einklappen, außer den letzten
+        let alleEinsaetze = document.querySelectorAll(".einsatz");
+        alleEinsaetze.forEach(function(e) {
+            e.querySelector(".einsatzInhalt").style.display = "none";
+            e.querySelector(".toggleSymbol").textContent = "▶";
+        });
 
-/* letzten Kollegen laden */
+        if (alleEinsaetze.length > 0) {
+            let letzter = alleEinsaetze[alleEinsaetze.length - 1];
+            let inhalt = letzter.querySelector(".einsatzInhalt");
+            let symbol = letzter.querySelector(".toggleSymbol");
+            inhalt.style.display = "block";
+            symbol.textContent = "▼";
+        }
+    }
+};
 
-let letzterKollege = localStorage.getItem("kollege");
-
-if(letzterKollege){
-document.getElementById("kollege").value = letzterKollege;
-}
-
-/* letzte Schicht laden */
-
-let letzteSchicht = localStorage.getItem("schicht");
-
-if(letzteSchicht){
-document.getElementById("schicht").value = letzteSchicht;
-}
-
-let gespeicherterTag = localStorage.getItem("MED_AktuellerTag");
-
-if(gespeicherterTag){
-
-let arbeitstag = JSON.parse(gespeicherterTag);
-
-document.getElementById("datum").value = arbeitstag.datum;
-document.getElementById("schicht").value = arbeitstag.schicht;
-document.getElementById("wagen").value = arbeitstag.wagen;
-document.getElementById("kollege").value = arbeitstag.kollege;
-
-arbeitstag.einsaetze.forEach(function(e){
-
-let button = document.getElementById("neuerEinsatz");
-button.click();
-
-let letzter = document.querySelectorAll(".einsatz");
-let einsatz = letzter[letzter.length - 1];
-
-let inputs = einsatz.querySelectorAll("input, textarea");
-
-inputs[0].value = e.einsatzart;
-inputs[1].value = e.adresse;
-inputs[2].value = e.melder;
-inputs[3].value = e.meldung;
-inputs[4].value = e.eintreffen;
-inputs[5].value = e.abfahrt;
-inputs[6].value = e.feststellung;
-inputs[7].value = e.massnahmen;
-inputs[8].value = e.bemerkung;
-
-});
-
-let alleEinsaetze = document.querySelectorAll(".einsatz");
-
-alleEinsaetze.forEach(function(e){
-
-let inhalt = e.querySelector(".einsatzInhalt");
-let symbol = e.querySelector(".toggleSymbol");
-
-inhalt.style.display = "none";
-symbol.textContent = "▶";
-
-});
-
-if(alleEinsaetze.length > 0){
-
-let letzter = alleEinsaetze[alleEinsaetze.length - 1];
-
-let inhalt = letzter.querySelector(".einsatzInhalt");
-let symbol = letzter.querySelector(".toggleSymbol");
-
-inhalt.style.display = "block";
-symbol.textContent = "▼";
-
-}
-
-}
-
-}
 
 document.getElementById("wagen").addEventListener("change", function(){
 localStorage.setItem("wagen", this.value);
@@ -1100,114 +1090,146 @@ autoSpeichern();
 
 document.getElementById("tagSpeichern").addEventListener("click", function(){
 
-let arbeitstag = {};
+    let arbeitstag = {};
+    arbeitstag.datum = document.getElementById("datum").value;
+    arbeitstag.schicht = document.getElementById("schicht").value;
+    arbeitstag.wagen = document.getElementById("wagen").value;
+    arbeitstag.kollege = document.getElementById("kollege").value;
+    arbeitstag.einsaetze = [];
 
-arbeitstag.datum = document.getElementById("datum").value;
+    let einsaetze = document.querySelectorAll(".einsatz");
 
-console.log("Speichere Tag:", arbeitstag.datum);
+    einsaetze.forEach(function(einsatz){
+        let daten = {};
+        let inputs = einsatz.querySelectorAll("input, textarea");
 
-arbeitstag.schicht = document.getElementById("schicht").value;
-arbeitstag.wagen = document.getElementById("wagen").value;
-arbeitstag.kollege = document.getElementById("kollege").value;
+        // WICHTIG: Den Titel mit der Straße für die History sichern
+        let titelElement = einsatz.querySelector(".einsatzTitel");
+        daten.headerTitel = titelElement ? titelElement.innerHTML : ""; 
 
-arbeitstag.einsaetze = [];
+        daten.einsatzart = inputs[0].value;
+        daten.adresse = inputs[1].value;
+        daten.melder = inputs[2].value;
+        daten.meldung = inputs[3].value;
+        daten.eintreffen = inputs[4].value;
+        daten.abfahrt = inputs[5].value;
+        daten.feststellung = inputs[6].value;
+        daten.massnahmen = inputs[7].value;
+        daten.bemerkung = inputs[8].value;
 
-let einsaetze = document.querySelectorAll(".einsatz");
+        arbeitstag.einsaetze.push(daten);
+    });
 
-einsaetze.forEach(function(einsatz){
+    let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
+    let index = archiv.findIndex(tag => tag.datum === arbeitstag.datum);
 
-let daten = {};
+    if(index !== -1){
+        // DATUM EXISTIERT SCHON -> INTELLIGENT ZUSAMMENFÜHREN
+        let existierenderTag = archiv[index];
+        
+        arbeitstag.einsaetze.forEach(neuerEinsatz => {
+            // Wir prüfen, ob dieser Einsatz (Zeit + Adresse) schon im Archiv ist
+            let istSchonDrin = existierenderTag.einsaetze.some(alt => 
+                alt.adresse === neuerEinsatz.adresse && 
+                alt.meldung === neuerEinsatz.meldung
+            );
 
-let inputs = einsatz.querySelectorAll("input, textarea");
+            if(!istSchonDrin) {
+                existierenderTag.einsaetze.push(neuerEinsatz);
+            }
+        });
+        
+        // Stammdaten aktualisieren
+        existierenderTag.wagen = arbeitstag.wagen;
+        existierenderTag.kollege = arbeitstag.kollege;
+        existierenderTag.schicht = arbeitstag.schicht;
+        
+        // WICHTIG: Die Einsätze neu sortieren (falls gewünscht, sonst einfach hinten dran)
+        // existierenderTag.einsaetze.sort((a, b) => a.meldung.localeCompare(b.meldung));
 
-daten.einsatzart = inputs[0].value;
-daten.adresse = inputs[1].value;
-daten.melder = inputs[2].value;
-daten.meldung = inputs[3].value;
-daten.eintreffen = inputs[4].value;
-daten.abfahrt = inputs[5].value;
-daten.feststellung = inputs[6].value;
-daten.massnahmen = inputs[7].value;
-daten.bemerkung = inputs[8].value;
+    } else {
+        // NEUES DATUM -> NEUER EINTRAG
+        archiv.push(arbeitstag);
+    }
 
-arbeitstag.einsaetze.push(daten);
+    localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+    alert("Arbeitstag erfolgreich im Archiv gespeichert/aktualisiert.");
 
 });
 
-let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
-
-let index = archiv.findIndex(tag => tag.datum === arbeitstag.datum);
-
-if(index !== -1){
-
-archiv[index] = arbeitstag;
-
-}else{
-
-archiv.push(arbeitstag);
-
-}
-
-localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
-
-alert("Arbeitstag gespeichert.");
-
-});
 
 function aktualisiereEinsatzNummern(){
+    let alleEinsaetze = document.querySelectorAll(".einsatz");
 
-let alleEinsaetze = document.querySelectorAll(".einsatz");
+    alleEinsaetze.forEach(function(einsatz, index){
+        let titel = einsatz.querySelector(".einsatzTitel");
+        let neueNummer = index + 1;
 
-alleEinsaetze.forEach(function(einsatz, index){
+        // Wir prüfen, ob im HTML des Titels ein Zeilenumbruch oder ein Span ist (unser Straßen-Format)
+        if(titel.innerHTML.includes("<br>") || titel.innerHTML.includes("span")) {
+            
+            // Wir teilen den Text am Zeilenumbruch
+            // Teil 0 ist "Einsatz X", Teil 1 ist die "Straße"
+            let teile = titel.innerHTML.split("<br>");
+            let straßenTeil = teile[1] || ""; 
 
-let titel = einsatz.querySelector(".einsatzTitel");
+            // Wir setzen den Titel neu zusammen: Neue Nummer + alte Straße
+            titel.innerHTML = "Einsatz " + neueNummer + "<br>" + straßenTeil;
+            
+        } else {
+            // Falls keine Straße drin steht, einfach nur die Nummer aktualisieren
+            titel.textContent = "Einsatz " + neueNummer;
+        }
+    });
 
-titel.textContent = "Einsatz " + (index + 1);
-
-});
-
-einsatzNummer = alleEinsaetze.length;
-
+    // Die globale Zählvariable für den nächsten neuen Einsatz anpassen
+    einsatzNummer = alleEinsaetze.length;
 }
+
+
 
 function autoSpeichern(){
 
-console.log("AUTOSAVE läuft");    
+    console.log("AUTOSAVE läuft");    
 
-let arbeitstag = {};
+    let arbeitstag = {};
 
-arbeitstag.datum = document.getElementById("datum").value;
-arbeitstag.schicht = document.getElementById("schicht").value;
-arbeitstag.wagen = document.getElementById("wagen").value;
-arbeitstag.kollege = document.getElementById("kollege").value;
+    arbeitstag.datum = document.getElementById("datum").value;
+    arbeitstag.schicht = document.getElementById("schicht").value;
+    arbeitstag.wagen = document.getElementById("wagen").value;
+    arbeitstag.kollege = document.getElementById("kollege").value;
 
-arbeitstag.einsaetze = [];
+    arbeitstag.einsaetze = [];
 
-let einsaetze = document.querySelectorAll(".einsatz");
+    let einsaetze = document.querySelectorAll(".einsatz");
 
-einsaetze.forEach(function(einsatz){
+    einsaetze.forEach(function(einsatz){
 
-let daten = {};
+        let daten = {};
+        let inputs = einsatz.querySelectorAll("input, textarea");
 
-let inputs = einsatz.querySelectorAll("input, textarea");
+        // Speichert den kompletten Inhalt des blauen Balkens (inkl. Straße)
+        let titelElement = einsatz.querySelector(".einsatzTitel");
+        daten.headerTitel = titelElement ? titelElement.innerHTML : ""; 
 
-daten.einsatzart = inputs[0].value;
-daten.adresse = inputs[1].value;
-daten.melder = inputs[2].value;
-daten.meldung = inputs[3].value;
-daten.eintreffen = inputs[4].value;
-daten.abfahrt = inputs[5].value;
-daten.feststellung = inputs[6].value;
-daten.massnahmen = inputs[7].value;
-daten.bemerkung = inputs[8].value;
+        daten.einsatzart = inputs[0].value;
+        daten.adresse = inputs[1].value;
+        daten.melder = inputs[2].value;
+        daten.meldung = inputs[3].value;
+        daten.eintreffen = inputs[4].value;
+        daten.abfahrt = inputs[5].value;
+        daten.feststellung = inputs[6].value;
+        daten.massnahmen = inputs[7].value;
+        daten.bemerkung = inputs[8].value;
 
-arbeitstag.einsaetze.push(daten);
+        arbeitstag.einsaetze.push(daten);
 
-});
+    });
 
-localStorage.setItem("MED_AktuellerTag", JSON.stringify(arbeitstag));
+    localStorage.setItem("MED_AktuellerTag", JSON.stringify(arbeitstag));
 
 }
+
 
 function downloadJSON(daten){
 
@@ -1434,27 +1456,31 @@ loeschButton.textContent = "🗑 Arbeitstag löschen";
 inhalt.appendChild(loeschButton);
 
 loeschButton.addEventListener("click", function(){
+    if(confirm("Diesen Arbeitstag wirklich löschen?")){
+        let pin = prompt("Bitte PIN eingeben:");
+        if(pin !== "0000") return; // Dein PIN
 
+        // 1. Das Archiv frisch laden
+        let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
 
+        // 2. Den "echten" Platz im Speicher finden, indem wir das Datum vergleichen
+        // Wir suchen im Archiv nach dem Eintrag, dessen Datum exakt dem 'tag.datum' entspricht
+        let echterIndex = archiv.findIndex(a => a.datum === tag.datum);
 
-if(confirm("Diesen Arbeitstag wirklich löschen?")){
-
-  let pin = prompt("Bitte PIN eingeben:");
-
-  if(pin !== "2410") return; // deinen PIN kannst du anpassen
-
-
-let archiv = JSON.parse(localStorage.getItem("MED_Archiv")) || [];
-
-archiv.splice(indexTag, 1);
-
-localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
-
-ladeHistorie();
-
-}
-
+        if (echterIndex !== -1) {
+            // 3. Nur wenn wir ihn gefunden haben, löschen wir genau diesen Index
+            archiv.splice(echterIndex, 1);
+            localStorage.setItem("MED_Archiv", JSON.stringify(archiv));
+            
+            // 4. Liste neu zeichnen
+            ladeHistorie();
+            alert("Arbeitstag wurde gelöscht.");
+        } else {
+            alert("Fehler: Der Tag konnte im Archiv nicht eindeutig gefunden werden.");
+        }
+    }
 });
+
 
 }else{
 
@@ -1474,43 +1500,50 @@ liste.appendChild(div);
 
 function editorLadeArbeitstag(tag){
 
-document.getElementById("zurueckAktuellerTag").style.display = "block";
+    document.getElementById("zurueckAktuellerTag").style.display = "block";
+    document.getElementById("historiePage").style.display = "none";
+    document.getElementById("mainPage").style.display = "block";
 
-document.getElementById("historiePage").style.display = "none";
-document.getElementById("mainPage").style.display = "block";
+    document.getElementById("datum").value = tag.datum;
+    document.getElementById("schicht").value = tag.schicht;
+    document.getElementById("wagen").value = tag.wagen;
+    document.getElementById("kollege").value = tag.kollege;
 
-document.getElementById("datum").value = tag.datum;
-document.getElementById("schicht").value = tag.schicht;
-document.getElementById("wagen").value = tag.wagen;
-document.getElementById("kollege").value = tag.kollege;
+    document.getElementById("einsatzListe").innerHTML = "";
+    einsatzNummer = 0;
 
-document.getElementById("einsatzListe").innerHTML = "";
+    tag.einsaetze.forEach(function(e){
 
-einsatzNummer = 0;
+        let button = document.getElementById("neuerEinsatz");
+        button.click();
 
-tag.einsaetze.forEach(function(e){
+        let letzter = document.querySelectorAll(".einsatz");
+        let einsatz = letzter[letzter.length - 1];
 
-let button = document.getElementById("neuerEinsatz");
-button.click();
+        let inputs = einsatz.querySelectorAll("input, textarea");
 
-let letzter = document.querySelectorAll(".einsatz");
-let einsatz = letzter[letzter.length - 1];
+        inputs[0].value = e.einsatzart;
+        inputs[1].value = e.adresse;
+        inputs[2].value = e.melder;
+        inputs[3].value = e.meldung;
+        inputs[4].value = e.eintreffen;
+        inputs[5].value = e.abfahrt;
+        inputs[6].value = e.feststellung;
+        inputs[7].value = e.massnahmen;
+        inputs[8].value = e.bemerkung;
 
-let inputs = einsatz.querySelectorAll("input, textarea");
-
-inputs[0].value = e.einsatzart;
-inputs[1].value = e.adresse;
-inputs[2].value = e.melder;
-inputs[3].value = e.meldung;
-inputs[4].value = e.eintreffen;
-inputs[5].value = e.abfahrt;
-inputs[6].value = e.feststellung;
-inputs[7].value = e.massnahmen;
-inputs[8].value = e.bemerkung;
-
-});
-
+        // --- NEU: Den Titel mit Straße wiederherstellen ---
+        if (e.headerTitel) {
+            setTimeout(function() {
+                let titelElement = einsatz.querySelector(".einsatzTitel");
+                if (titelElement) {
+                    titelElement.innerHTML = e.headerTitel;
+                }
+            }, 50); // Kleiner Zeitpuffer, damit der Balken bereit ist
+        }
+    });
 }
+
 
 function ladeArbeitstag(tag){
 
